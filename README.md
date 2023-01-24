@@ -32,6 +32,6 @@ Chamanzar, A., Elmer, J., Shutter, L., Hartings, J. A., and Grover, P., "WAVEFRO
 
 ## References
 
-[1] Chamanzar, A., Elmer, J., Shutter, L., Hartings, J. A., & Grover, P. (2022). Noninvasive, automated and reliable detection of spreading depolarizations in severe traumatic brain injury using scalp EEG. bioRxiv. https://doi.org/10.1101/2022.10.07.511376
+[1] Chamanzar, A., Elmer, J., Shutter, L., Hartings, J. A., and Grover, P. (2022). Noninvasive, automated and reliable detection of spreading depolarizations in severe traumatic brain injury using scalp EEG. bioRxiv. https://doi.org/10.1101/2022.10.07.511376
 
-[2] Chamanzar, A., George, S., Venkatesh, P., Chamanzar, M., Shutter, L., Elmer, J., & Grover, P. (2018). An algorithm for automated, noninvasive detection of cortical spreading depolarizations based on EEG simulations. IEEE Transactions on Biomedical Engineering, 66(4), 1115-1126. https://doi.org/10.1109/TBME.2018.2867112
+[2] Chamanzar, A., George, S., Venkatesh, P., Chamanzar, M., Shutter, L., Elmer, J., and Grover, P. (2018). An algorithm for automated, noninvasive detection of cortical spreading depolarizations based on EEG simulations. IEEE Transactions on Biomedical Engineering, 66(4), 1115-1126. https://doi.org/10.1109/TBME.2018.2867112
