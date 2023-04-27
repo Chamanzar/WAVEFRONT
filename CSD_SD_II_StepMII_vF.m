@@ -91,8 +91,8 @@ for ss = 1:Sessions_size
         
         
         % filter
-        EEG = pop_eegfiltnew(EEG, 0.01,50,85000,0,[],1);
-        ECoG = pop_eegfiltnew(ECoG, 0.01,50,85000,0,[],1);
+        EEG = pop_eegfiltnew(EEG, 0.001,50,85000,0,[],1);
+        ECoG = pop_eegfiltnew(ECoG, 0.001,50,85000,0,[],1);
     
         ECoG = eeg_checkset( ECoG );
         EEG = eeg_checkset( EEG );
