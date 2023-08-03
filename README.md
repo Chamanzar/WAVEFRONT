@@ -1,5 +1,5 @@
 # WAVEFRONT
-Noninvasive, automated and reliable detection of spreading depolarizations in the brain
+Noninvasive and reliable automated detection of spreading depolarization in severe traumatic brain injury using scalp EEG
 
 
 ## Versioning
