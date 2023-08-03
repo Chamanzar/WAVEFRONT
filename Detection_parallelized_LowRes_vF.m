@@ -3,6 +3,18 @@ function [] = Detection_parallelized_LowRes_vF(Sub_ID,ss_start,ss_End,LR)
 % close all
 % clc
 
+%%
+% Main SD detection code for WAVEFRONT, along with performance calculations
+%
+% See: README.txt and [1] for more info.
+
+% [1] Alireza Chamanzar, Jonathan Elmer, Lori Shutter, Jed Hartings, Pulkit Grover,
+%  "Noninvasive and reliable automated detection of spreading depolarization in severe traumatic brain injury using scalp EEG",
+%   Submitted to Nature Comms Med, 2022.
+
+% Author: Alireza 	Date: 2022/01/05 12:00:00 	Revision: 0.1
+% Copyright: This project is licensed - see the LICENSE.md file for details
+
 
 % Sub_ID = '04-1201';
 % LR='R';
