@@ -7,8 +7,7 @@ clc
 % See: README.txt and [1] for more info.
 
 % [1] Alireza Chamanzar, Jonathan Elmer, Lori Shutter, Jed Hartings, Pulkit Grover,
-%  "Noninvasive, automated and reliable detection of spreading depolarizations in 
-%                                   severe traumatic brain injury using scalp EEG",
+%  "Noninvasive and reliable automated detection of spreading depolarization in severe traumatic brain injury using scalp EEG",
 %   Submitted to Nature Comms Med, 2022.
 
 % Author: Alireza 	Date: 2021/12/19 12:00:48 	Revision: 0.1
