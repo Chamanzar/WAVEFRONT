@@ -1,6 +1,19 @@
 clear all
 clc
 
+%%
+% ROC curve analysis and SD velocity estimation and corresponding plots
+%
+% See: README.txt and [1] for more info.
+
+% [1] Alireza Chamanzar, Jonathan Elmer, Lori Shutter, Jed Hartings, Pulkit Grover,
+%  "Noninvasive and reliable automated detection of spreading depolarization in severe traumatic brain injury using scalp EEG",
+%   Submitted to Nature Comms Med, 2022.
+
+% Author: Alireza 	Date: 2022/01/06 12:00:00 	Revision: 0.1
+% Copyright: This project is licensed - see the LICENSE.md file for details
+
+
 %% Initialization:
 
 Sub_ID = {'04-1229','04-1206','04-1201','04-1167','04-1205','04-1203','04-1177','04-1214','04-1215','04-1216','04-1220','04-1219'};
