@@ -8,12 +8,12 @@ We use [SemVer](http://semver.org/) for versioning.
 
 ## Authors
 
-First/Corresponding Author Contact Information  
+Corresponding Authors: 
 
-    Name: Alireza Chamanzar  
+    Name: Alireza Chamanzar and Pulkit Grover  
     Institution: Carnegie Mellon University  
     Address: Hamerschlag Hall B200, 5000 Forbes Ave., Pittsburgh PA 15213 United States  
-    Email: achamanz@andrew.cmu.edu  
+    Emails: achamanz@andrew.cmu.edu  ,  pgrover@andrew.cmu.edu 
    
 
 ## License
