@@ -34,23 +34,23 @@ for ss = 1:Sessions_size  % Loop through all found sessions for pateint ID
     measurement_data_Imp = measurement_data;
     start_date_time_Imp = start_date_time;
     time_vector_Imp = time_vector;
-    EEG_names = dir('EEG,Composite,SampleSeries*.mat');
+    EEG_names = dir('EEG,Composite,SampleSeries*.mat'); % Locate all 'parts' of the recorded session
     Part_size = size(EEG_names,1);
-    for pp = 1: Part_size
+    for pp = 1: Part_size  % Loop through all 'part' files which contain raw EEG data
         Name = [Patient_ID,'_',Session_names(ss).name,'_',EEG_names(pp).name(46:end-4)];
-        load(EEG_names(pp).name)
-        data_qual_time_EEG = data_qual_time;
+        load(EEG_names(pp).name)  % For each part 'pp' load the data
+        data_qual_time_EEG = data_qual_time;  % Assign loaded varaibles as 'EEG Variables'
         data_qual_str_EEG = data_qual_str;
         for cc = 1:size(comp_elements,2)
             Q_events = zeros(size(time_vector));
             Q_events(ismember(time_vector,data_qual_time))=1000;
-            fid =  fopen('Event.txt');
-            Event_time_tot = [];
+            fid =  fopen('Event.txt');  % Load 'Event.txt' which contains CSD Ground Truth information
+            Event_time_tot = [];  % Initialize vectors for storing event data
             Event_label_tot = [];
-            Events = textscan(fid,'%s','Delimiter',{'*'});
+            Events = textscan(fid,'%s','Delimiter',{'*'});  % Read events properly as inidividual events
             fclose(fid);
-            start_date_time = datetime(start_date_time,'Format','dd MMMM yyyy, HH:mm:ss.SSS');
-            for ee = 1:2:size(Events{1,1},1)
+            start_date_time = datetime(start_date_time,'Format','dd MMMM yyyy, HH:mm:ss.SSS');  % Format start datatime into desired format
+            for ee = 1:2:size(Events{1,1},1)  % This loop plots events which are read from previous file
                 Event_label_tot = cat(1,Event_label_tot,Events{1,1}(ee));
                 Events_stamps_datetime = datetime(Events{1,1}(ee+1),'Format','yyyy-MM-dd HH:mm:ss.SSS');
                 Event_time = (etime(datevec(Events_stamps_datetime),datevec(start_date_time)));
