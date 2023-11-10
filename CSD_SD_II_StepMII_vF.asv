@@ -24,12 +24,12 @@ Patient_ID = current_path(end-6:end); % Extract patient ID from path
 Session_names = dir('Patient*');  % Find list of Session in Patient ID Folder
 Sessions_size = size(Session_names,1); 
 
-for ss = 1:Sessions_size  % Loop through all found sessions for pateint ID
-    cd(Session_names(ss).name) % Enter session specific folder
-    current_path = pwd;  % Update current path to include Session extension
+for ss = 1:Sessions_size  % Loop through all previously 
+    cd(Session_names(ss).name)
+    current_path = pwd;
     EEG_Imp = dir('EEG,Composite,Impedance,*.mat')
-    load(EEG_Imp(1).name) % Load Session Specific Impdence file (saved within session folder)
-    % Assign all four loaded variables as 'Impedence variables'
+    load(EEG_Imp(1).name)
+    
     comp_elements_Imp = comp_elements;
     measurement_data_Imp = measurement_data;
     start_date_time_Imp = start_date_time;
