@@ -68,32 +68,33 @@ for ss = 1:Sessions_size  % Loop through all found sessions for pateint ID
         
         close all
         %% Read in bdf file, average data to mastoids (electrodes 129 130), bandpass filter 1-100Hz, and assign channel names
-        % read in edf
+        % Read in EDF (this is primarily for initalizaing 'EEG' data structure)
         EEG = pop_biosig('H:\SD-II\04-1167\04-1167\LabchartECG.edf', 'ref',[] ,'refoptions',{'keepref' 'on'});
-        EEG.data = measurement_data;
-        EEG.times = time_vector*1000;%time in ms
-        EEG.nbchan = size(measurement_data,1);
-        EEG.comments = [];
-        EEG.srate = 256;%1/(time_vector(2)-time_vector(1));
-        EEG.xmin = time_vector(1);
+        EEG.data = measurement_data; % Assign data loaded in line 41 to EEG structure
+        EEG.times = time_vector*1000; % time in ms
+        EEG.nbchan = size(measurement_data,1); % Measure number of channels
+        EEG.comments = []; % Initialize comments vector
+        EEG.srate = 256; % calculated by 1/(time_vector(2)-time_vector(1))
+        EEG.xmin = time_vector(1);  % Find min and max time points
         EEG.xmax = time_vector(end);
-        EEG.pnts = size(time_vector,2);
-        EEG.etc.T0 = datevec(start_date_time);
-        for i=1:size(EEG.data,1)
+        EEG.pnts = size(time_vector,2);  % Find total number of data points
+        EEG.etc.T0 = datevec(start_date_time);  % Record start time 
+        for i=1:size(EEG.data,1)  % Label channels names via info from comp elements
             EEG.chanlocs(i).labels = char(comp_elements(i));
             %    EEG.chanlocs(i).urchan = i;
         end
-        EEG = eeg_checkset( EEG );
+        EEG = eeg_checkset( EEG ); % eeglab call to ensure data is formatted correctly 
+        % Load channel location information based on standard 10-5 configuration 
         EEG=pop_chanedit(EEG, 'lookup',[eegpath '/plugins/dipfit/standard_BESA/standard-10-5-cap385.elp']); 
         
+        % Seperate EEG and ECoG data into seperate variable structs
         ECoG = pop_select( EEG,'channel',{'ECoG1' 'ECoG2' 'ECoG3' 'ECoG4' 'ECoG5' 'ECoG6'});
         EEG = pop_select( EEG,'nochannel',{'ECoG1' 'ECoG2' 'ECoG3' 'ECoG4' 'ECoG5' 'ECoG6' 'ECoG7' 'ECoG8'});
         
-        
-        % filter
+        % Bandpass filter raw data between [0.001 - 50] Hz
         EEG = pop_eegfiltnew(EEG, 0.001,50,85000,0,[],1);
         ECoG = pop_eegfiltnew(ECoG, 0.001,50,85000,0,[],1);
-    
+        % eeglab call for ensuring data is formatted correctly 
         ECoG = eeg_checkset( ECoG );
         EEG = eeg_checkset( EEG );
         %% visually check electrodes and interpolate if necessary. If all are fine, then run...
