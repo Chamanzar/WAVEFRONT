@@ -49,6 +49,8 @@ for ss = 1:Sessions_size  % Loop through all found sessions for pateint ID
             Event_label_tot = [];
             Events = textscan(fid,'%s','Delimiter',{'*'});  % Read events properly as inidividual events
             fclose(fid);
+            % Newer eeglab versions may require 'MMM' rather than 'MMMM' as provided below
+            %start_date_time = datetime(start_date_time,'Format','dd MMM yyyy, HH:mm:ss.SSS');  % Format start datatime into desired format
             start_date_time = datetime(start_date_time,'Format','dd MMMM yyyy, HH:mm:ss.SSS');  % Format start datatime into desired format
             for ee = 1:2:size(Events{1,1},1)  % This loop plots events which are read from previous file
                 Event_label_tot = cat(1,Event_label_tot,Events{1,1}(ee));
@@ -68,7 +70,7 @@ for ss = 1:Sessions_size  % Loop through all found sessions for pateint ID
         
         close all
         %% Read in bdf file, average data to mastoids (electrodes 129 130), bandpass filter 1-100Hz, and assign channel names
-        % Read in EDF (this is primarily for initalizaing 'EEG' data structure)
+        % Read in EDF for initalizaing 'EEG' data structure with desired fields
         EEG = pop_biosig('H:\SD-II\04-1167\04-1167\LabchartECG.edf', 'ref',[] ,'refoptions',{'keepref' 'on'});
         EEG.data = measurement_data; % Assign data loaded in line 41 to EEG structure
         EEG.times = time_vector*1000; % time in ms
@@ -92,69 +94,75 @@ for ss = 1:Sessions_size  % Loop through all found sessions for pateint ID
         EEG = pop_select( EEG,'nochannel',{'ECoG1' 'ECoG2' 'ECoG3' 'ECoG4' 'ECoG5' 'ECoG6' 'ECoG7' 'ECoG8'});
         
         % Bandpass filter raw data between [0.001 - 50] Hz
+        % NOTE: newer eeglabs may return error for below params
+        % if given error modify to EEG = pop_eegfiltnew(EEG, 0.01,50,85000,0,[],1)
         EEG = pop_eegfiltnew(EEG, 0.001,50,85000,0,[],1);
         ECoG = pop_eegfiltnew(ECoG, 0.001,50,85000,0,[],1);
         % eeglab call for ensuring data is formatted correctly 
         ECoG = eeg_checkset( ECoG );
         EEG = eeg_checkset( EEG );
         %% visually check electrodes and interpolate if necessary. If all are fine, then run...
-        
-        EEG.setname= Name;
-        EEG = eeg_checkset( EEG );
+        EEG.setname= Name; % Assign appropriate names to both EEG and ECoG structs 
+        EEG = eeg_checkset( EEG ); % eeglab format check 
         ECoG.setname= Name;
         ECoG = eeg_checkset( ECoG );
-   
+        % Save bandpass filtered EEG and ECoG data as seperate 'set' files
         EEG = pop_saveset( EEG, 'filename',[Name , '_EEG_filtered_withDC.set'],'filepath',current_path);
         ECoG = pop_saveset( ECoG, 'filename',[Name , '_ECoG_filtered_withDC.set'],'filepath',current_path);
         
         % STOP
         %% Loading ECG, PLETH, Resp, adding events (SDs, quality, etc.):
-        
-        ECG_names = dir('ECG,II,SampleSeries*.mat');
-        if(~isempty(ECG_names))
-            ECG_size = size(ECG_names,1);
-            measurement_data_ECG = [];
+        % This large code block works to process additional Physio data
+        ECG_names = dir('ECG,II,SampleSeries*.mat'); % Begin w ECG files
+        if(~isempty(ECG_names)) % If any ECG files are present enter processing loop
+            ECG_size = size(ECG_names,1); % Measure number of ECG files present 
+            measurement_data_ECG = []; % Initialize vectors
             start_date_time_ECG = [];
             time_vector_ECG = [];
             data_qual_time_ECG = [];
             data_qual_str_ECG = [];
-            for i = 1: ECG_size
-                load(ECG_names(i).name)
-                start_date_time_ECG = cat(1,start_date_time_ECG,start_date_time);
-                Delta_step = time_vector(2)-time_vector(1);
-                if(i>1)
-                    Delta_tp = (time_vector(1)-time_vector_ECG(end));
-                    extended_time_vector = (time_vector_ECG(end)...
+            for i = 1: ECG_size % Loop throug i number of ECG files
+                load(ECG_names(i).name) % Load ECG file 'i'
+                start_date_time_ECG = cat(1,start_date_time_ECG,start_date_time); % Save start data of file
+                Delta_step = time_vector(2)-time_vector(1); % Calculate time step of file i 
+                if(i>1)     % If this not our first file
+                    % Find time diff across ECG files (looping for time overlap betweeen files)
+                    Delta_tp = (time_vector(1)-time_vector_ECG(end)); 
+                    % If large gap between new files and exisiting data fill in gap with extended time vec
+                    extended_time_vector = (time_vector_ECG(end)... 
                         +Delta_step:Delta_step:time_vector(1)-Delta_step);
-                else
-                    Delta_tp = (Delta_step);
-                    extended_time_vector = [];
+                else         % If loading first ECG file 
+                    Delta_tp = (Delta_step); % Set delta tp as delta step
+                    extended_time_vector = []; % Initialize extended time vector
                 end
-                if(Delta_tp<0)
+                if(Delta_tp<0) % If time overlap is detected only append new information
                     overlap_start = find(ismember(time_vector_ECG(end),time_vector));
+                    % Find where time overlap ends, then add all vals beyond that index for time and data
                     time_vector_ECG = cat(2,time_vector_ECG,time_vector(overlap_start+1:end));
                     measurement_data_ECG =  cat(1,measurement_data_ECG,measurement_data(overlap_start+1:end,:));
-                else
+                else % In cases where there delta_tp>0, simply append loaded time vector and measurement data
                     time_vector_ECG = cat(2,time_vector_ECG,cat(2,extended_time_vector,time_vector));
                     measurement_data_ECG =  cat(1,zeros(size(extended_time_vector,2),1),measurement_data_ECG,measurement_data);
                 end
-                
+                % Append all data quality times and strings to Session-wide data variable
                 data_qual_time_ECG = cat(2,data_qual_time_ECG,data_qual_time);
                 data_qual_str_ECG = cat(2,data_qual_str_ECG,data_qual_str);
             end
-            
+            % Ensure data is properly time sorted by soritng times and then data in same order 
             [time_vector_ECG,ind] = sort(time_vector_ECG,2);
             measurement_data_ECG = measurement_data_ECG(ind);
-            
+            % Shift time vector by delta step
             time_vector_ECG_shifted = [time_vector_ECG(1)-Delta_step,time_vector_ECG(1:end-1)];
+            % Check for data beyond expected ECG time vector
             ind = find((time_vector_ECG - time_vector_ECG_shifted)>2*Delta_step);
-            for t=1:size(ind,2)
+            for t=1:size(ind,2) % If 'out of range' data found
                 time_vector_extension = time_vector_ECG(ind(t)-1):Delta_step:time_vector_ECG(ind(t));
+                % Calculate how much to extend the data and time vectors by 
                 time_vector_ECG = cat(2,time_vector_ECG(1:ind(t)-2),time_vector_extension,time_vector_ECG(ind(t)+1:end));
                 measurement_data_ECG =  cat(1,measurement_data_ECG(1:ind(t)-2),zeros(size(time_vector_extension,2),1),measurement_data_ECG(ind(t)+1:end));
-                ind = ind+size(time_vector_extension,2)-2;
+                ind = ind+size(time_vector_extension,2)-2; % Update value of ind
             end
-        else
+        else % If no ECG files are avaliable
             measurement_data_ECG = EEG.data(1,:)' * 0;
             time_vector_ECG = EEG.times/1000;
         end
