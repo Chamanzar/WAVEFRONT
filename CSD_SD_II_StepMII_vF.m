@@ -192,7 +192,7 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
                     % in gap with 'extended time vec'
                     extended_time_vector = (time_vector_PLETH(end)...
                         +Delta_step:Delta_step:time_vector(1)-Delta_step);
-                else    % If loading first ECG file 
+                else    % If loading first PLETH file 
                     Delta_tp = (Delta_step); % Set delta tp as delta step
                     extended_time_vector = []; % Set extended time vector as empty
                 end
@@ -206,7 +206,7 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
                     time_vector_PLETH = cat(2,time_vector_PLETH,cat(2,extended_time_vector,time_vector));
                     measurement_data_PLETH =  cat(1,zeros(size(extended_time_vector,2),1),measurement_data_PLETH,measurement_data);
                 end
-                
+                % Append all data quality times and strings to Session-wide data variable
                 data_qual_time_PLETH = cat(2,data_qual_time_PLETH,data_qual_time);
                 data_qual_str_PLETH = cat(2,data_qual_str_PLETH,data_qual_str);
             end
@@ -229,59 +229,68 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
             measurement_data_PLETH = EEG.data(1,:)' * 0;
             time_vector_PLETH = EEG.times/1000;
         end
+        % End of PLETH processing loop
+        % Beginning of RESP processing loop which again follows very similar
+        % logic to ECG & PLETH processing         
         
-        
-        
-        RESP_names = dir('RESP,na,SampleSeries,Integer,IntelliVue,data*.mat');
-        if(~isempty(RESP_names))
-            RESP_size = size(RESP_names,1);
-            measurement_data_RESP = [];
+        RESP_names = dir('RESP,na,SampleSeries,Integer,IntelliVue,data*.mat'); % Read all RESP files
+        if(~isempty(RESP_names)) % If RESP files are present enter processing loop
+            RESP_size = size(RESP_names,1); % Measure number of RESP files present 
+            measurement_data_RESP = []; % Initialize vectors
             start_date_time_RESP = [];
             time_vector_RESP = [];
             data_qual_time_RESP = [];
             data_qual_str_RESP = [];
-            for i = 1: RESP_size
-                load(RESP_names(i).name)
-                start_date_time_RESP = cat(1,start_date_time_RESP,start_date_time);
-                Delta_step = time_vector(2)-time_vector(1);
-                if(i>1)
+            for i = 1: RESP_size % Loop throug i number of RESP files
+                load(RESP_names(i).name) % Load RESP file 'i'
+                start_date_time_RESP = cat(1,start_date_time_RESP,start_date_time); % Save start date of file
+                Delta_step = time_vector(2)-time_vector(1); % Calculate time step of file i 
+                if(i>1) % If not reading first file
+                    % Find time diff across RESP files (looking for time overlap betweeen files)                    
                     Delta_tp = (time_vector(1)-time_vector_RESP(end));
+                    % If large gap between new file and exisiting data fill
+                    % in gap with 'extended time vec'               
                     extended_time_vector = (time_vector_RESP(end)...
                         +Delta_step:Delta_step:time_vector(1)-Delta_step);
-                else
-                    Delta_tp = (Delta_step);
-                    extended_time_vector = [];
+                else % If loading first RESP file 
+                    Delta_tp = (Delta_step); % Set delta tp as delta step
+                    extended_time_vector = []; % Set extended time vector as empty
                 end
-                if(Delta_tp<0)
+                if(Delta_tp<0) % If time overlap is detected, only append 'new' information
                     overlap_start = find(ismember(time_vector_RESP(end),time_vector));
+                    % Find where time overlap ends & add all vals beyond
+                    % that index for both time and data vectors
                     time_vector_RESP = cat(2,time_vector_RESP,time_vector(overlap_start+1:end));
                     measurement_data_RESP =  cat(1,measurement_data_RESP,measurement_data(overlap_start+1:end,:));
-                else
+                else % In cases where there delta_tp>0, simply append loaded time vector and measurement data
                     time_vector_RESP = cat(2,time_vector_RESP,cat(2,extended_time_vector,time_vector));
                     measurement_data_RESP =  cat(1,zeros(size(extended_time_vector,2),1),measurement_data_RESP,measurement_data);
                 end
-                
+                % Append all data quality times and strings to Session-wide data variable
                 data_qual_time_RESP = cat(2,data_qual_time_RESP,data_qual_time);
                 data_qual_str_RESP = cat(2,data_qual_str_RESP,data_qual_str);
             end
-            
-            
+            % Ensure data is properly time sorted by sorting times & then data in same order 
             [time_vector_RESP,ind] = sort(time_vector_RESP,2);
             measurement_data_RESP = measurement_data_RESP(ind);
-            
+            % Shift time vector by delta step
             time_vector_RESP_shifted = [time_vector_RESP(1)-Delta_step,time_vector_RESP(1:end-1)];
+            % Check for data beyond expected RESP time vector
             ind = find((time_vector_RESP - time_vector_RESP_shifted)>2*Delta_step);
-            for t=1:size(ind,2)
+            for t=1:size(ind,2) % If 'out of range' data found
+                % Calculate necessary extension for data and time vectors  
                 time_vector_extension = time_vector_RESP(ind(t)-1):Delta_step:time_vector_RESP(ind(t));
                 time_vector_RESP = cat(2,time_vector_RESP(1:ind(t)-2),time_vector_extension,time_vector_RESP(ind(t)+1:end));
                 measurement_data_RESP =  cat(1,measurement_data_RESP(1:ind(t)-2),zeros(size(time_vector_extension,2),1),measurement_data_RESP(ind(t)+1:end));
-                ind = ind+size(time_vector_extension,2)-2;
+                ind = ind+size(time_vector_extension,2)-2; % Update value of ind
             end
-        else
+        else % If no RESP files are avaliable for given Patient-ID/session 
+             % set dummy vals for measurement data and time vectors
             measurement_data_RESP = EEG.data(1,:)' * 0;
             time_vector_RESP = EEG.times/1000;
         end
-
+        % End of RESP processing loop
+        
         if(~isempty(ECG_names))
             measurement_data_ECG = resample(measurement_data_ECG,256,500);
         end
