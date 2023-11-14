@@ -290,7 +290,7 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
             time_vector_RESP = EEG.times/1000;
         end
         % End of RESP processing loop
-        
+        % Resample Physio Data to better match EEG/ECoG data
         if(~isempty(ECG_names))
             measurement_data_ECG = resample(measurement_data_ECG,256,500);
         end
@@ -301,59 +301,59 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
             measurement_data_RESP = resample(measurement_data_RESP,2560,625);
         end
         
-        Delta_T = 1/256;
-        Delta_To = ((EEG.times(1)/1000)-time_vector_ECG(1));
-        Delta_To = round(Delta_To / Delta_T);
-        if(Delta_To>=0)
+        Delta_T = 1/256; % Define sampling rate based on resample above
+        Delta_To = ((EEG.times(1)/1000)-time_vector_ECG(1)); % Find difference of EEG & ECG start times
+        Delta_To = round(Delta_To / Delta_T);  % Convert time unit back to samples
+        if(Delta_To>=0) % If ECG start preceds EEG trim beginning of ECG data
             measurement_data_ECG = measurement_data_ECG(Delta_To+1:end);
-        else
+        else % If EEG start preceeds ECG pad ECG data with zeros to match length
             measurement_data_ECG = cat(1,zeros(abs(Delta_To),1),measurement_data_ECG);
         end
         
-        if(size(measurement_data_ECG,1)>=EEG.pnts)
-            measurement_data_ECG = measurement_data_ECG(1:EEG.pnts);
-        else
+        if(size(measurement_data_ECG,1)>=EEG.pnts) % IF ECG is longer than EEG
+            measurement_data_ECG = measurement_data_ECG(1:EEG.pnts); % trim end of data vector to match length 
+        else % If EEG is longer than ECG, pad end of ECG with zeros to match length 
             measurement_data_ECG = cat(1,measurement_data_ECG,zeros((EEG.pnts-size(measurement_data_ECG,1)),1));
         end
-        
-        Delta_To = ((EEG.times(1)/1000)-time_vector_PLETH(1));
-        Delta_To = round(Delta_To / Delta_T);
-        if(Delta_To>=0)
+        % Repeat this time trimming process for both PLETH and RESP files
+        Delta_To = ((EEG.times(1)/1000)-time_vector_PLETH(1)); % Find difference of EEG & PLETH start times
+        Delta_To = round(Delta_To / Delta_T); % Convert time unit back to samples
+        if(Delta_To>=0) % If PLETH start preceds EEG trim beginning of PLETH data
             measurement_data_PLETH = measurement_data_PLETH(Delta_To+1:end);
-        else
+        else % If EEG start preceeds PLETH pad PLETH data with zeros to match length
             measurement_data_PLETH = cat(1,zeros(abs(Delta_To),1),measurement_data_PLETH);
         end
-        if(size(measurement_data_PLETH,1)>=EEG.pnts)
-            measurement_data_PLETH = measurement_data_PLETH(1:EEG.pnts);
-        else
+        if(size(measurement_data_PLETH,1)>=EEG.pnts) % IF PLETH is longer than EEG
+            measurement_data_PLETH = measurement_data_PLETH(1:EEG.pnts); % trim end of data vector to match length 
+        else % If EEG is longer than PLETH pad PLETH data with zeros to match length 
             measurement_data_PLETH = cat(1,measurement_data_PLETH,zeros((EEG.pnts-size(measurement_data_PLETH,1)),1));
         end
         
-        Delta_To = ((EEG.times(1)/1000)-time_vector_RESP(1));
-        Delta_To = round(Delta_To / Delta_T);
-        if(Delta_To>=0)
+        Delta_To = ((EEG.times(1)/1000)-time_vector_RESP(1)); % Find difference of EEG & RESP start times
+        Delta_To = round(Delta_To / Delta_T); % Convert time unit back to samples
+        if(Delta_To>=0) % If RESP start preceds EEG trim beginning of RESP data
             measurement_data_RESP = measurement_data_RESP(Delta_To+1:end);
-        else
+        else % If EEG start preceeds RESP pad RESP data with zeros to match length
             measurement_data_RESP = cat(1,zeros(abs(Delta_To),1),measurement_data_RESP);
         end
-        if(size(measurement_data_RESP,1)>=EEG.pnts)
-            measurement_data_RESP = measurement_data_RESP(1:EEG.pnts);
-        else
+        if(size(measurement_data_RESP,1)>=EEG.pnts) % IF RESP is longer than EEG
+            measurement_data_RESP = measurement_data_RESP(1:EEG.pnts); % trim end of data vector to match length 
+        else % If EEG is longer than RESP, pad end with zeros to match length 
             measurement_data_RESP = cat(1,measurement_data_RESP,zeros((EEG.pnts-size(measurement_data_RESP,1)),1));
         end
         
-        % Add the ECG, PLETH, and RESP channels to EEG:
+        % Add the ECG, PLETH, and RESP channels to EEG struct:
         EEG.data(end+1,:) = measurement_data_ECG;
         EEG.data(end+1,:) = measurement_data_PLETH;
         EEG.data(end+1,:) = measurement_data_RESP;
-        EEG.nbchan = size(EEG.data,1);
-        if ~isempty(EEG.chanlocs)
+        EEG.nbchan = size(EEG.data,1); % Update number of chans to account for new Physio Data
+        if ~isempty(EEG.chanlocs) % Provided the chanlocs field is present add channel labels for recently appended data
             EEG.chanlocs(end+1).labels = 'ECG';
             EEG.chanlocs(end+1).labels = 'PLETH';
             EEG.chanlocs(end+1).labels = 'RESP';
         end
         
-        EEG_pruned = pop_select(EEG,'point',[2,size(EEG.data,2)]);
+        EEG_pruned = pop_select(EEG,'point',[2,size(EEG.data,2)]); % EEG Pruned is a copy of as EEG but with first data point removed
         EEG.event = EEG_pruned.event;
         EEG.event.type = 'Dummy';
         EEG.event.latency = 0;
