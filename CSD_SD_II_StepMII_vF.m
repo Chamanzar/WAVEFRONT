@@ -30,31 +30,39 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
     cd(Session_names(ss).name) % Enter session specific folder
     current_path = pwd;  % Update current path to include Session extension
     EEG_Imp = dir('EEG,Composite,Impedance,*.mat')
-    load(EEG_Imp(1).name) % Load Session Specific Impdence file (saved within session folder)
-    % Assign loaded variables as 'Impedence variables'
+    % Load Session Specific Impdence file (saved within session folder)
+    load(EEG_Imp(1).name) 
+    % Assign loaded variables as 'Impedance variables'
     comp_elements_Imp = comp_elements;
     measurement_data_Imp = measurement_data;
     start_date_time_Imp = start_date_time;
     time_vector_Imp = time_vector;
-    EEG_names = dir('EEG,Composite,SampleSeries*.mat'); % Locate all 'parts' of the Session
+    % Locate all 'parts' of the Session
+    EEG_names = dir('EEG,Composite,SampleSeries*.mat'); 
     Part_size = size(EEG_names,1);
-    for pp = 1: Part_size  % Loop through all 'part' files which contain raw EEG data
+    % Loop through all 'part' files which contain raw EEG data
+    for pp = 1: Part_size  
         Name = [Patient_ID,'_',Session_names(ss).name,'_',EEG_names(pp).name(46:end-4)];
         load(EEG_names(pp).name)  % For each part 'pp' load the data
-        data_qual_time_EEG = data_qual_time;  % Assign loaded varaibles as 'EEG Variables'
+        % Assign loaded varaibles as 'EEG Variables'
+        data_qual_time_EEG = data_qual_time;  
         data_qual_str_EEG = data_qual_str;
         for cc = 1:size(comp_elements,2)
             Q_events = zeros(size(time_vector));
             Q_events(ismember(time_vector,data_qual_time))=1000;
-            fid =  fopen('Event.txt');  % Load 'Event.txt' which contain clinical annotations 
+            % Load 'Event.txt' which contain clinical annotations 
+            fid =  fopen('Event.txt');  
             Event_time_tot = [];  % Initialize vectors for storing event data
             Event_label_tot = [];
-            Events = textscan(fid,'%s','Delimiter',{'*'});  % Read events properly based on input file
+            % Read events based on input format
+            Events = textscan(fid,'%s','Delimiter',{'*'}); 
             fclose(fid);
-            % Newer eeglab versions may require 'MMM' rather than 'MMMM' as provided below
-            %start_date_time = datetime(start_date_time,'Format','dd MMM yyyy, HH:mm:ss.SSS');  
-            start_date_time = datetime(start_date_time,'Format','dd MMMM yyyy, HH:mm:ss.SSS');  % Format start datatime into desired format
-            for ee = 1:2:size(Events{1,1},1)  % This loop plots events which are read from file
+            %Format start datatime into desired format
+            start_date_time = datetime(start_date_time,'Format','dd MMMM yyyy, HH:mm:ss.SSS');  
+            %Newer eeglab versions may require 'MMM' rather than 'MMMM' as provided below
+            % start_date_time = datetime(start_date_time,'Format','dd MMM yyyy, HH:mm:ss.SSS');  
+            % This loop plots events which are read from file
+            for ee = 1:2:size(Events{1,1},1)  
                 Event_label_tot = cat(1,Event_label_tot,Events{1,1}(ee));
                 Events_stamps_datetime = datetime(Events{1,1}(ee+1),'Format','yyyy-MM-dd HH:mm:ss.SSS');
                 Event_time = (etime(datevec(Events_stamps_datetime),datevec(start_date_time)));
@@ -73,7 +81,8 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
         %% Read in bdf file, average data to mastoids (electrodes 129 130), bandpass filter 1-100Hz, and assign channel names
         % Read in EDF for initalizaing 'EEG' data structure with desired fields
         EEG = pop_biosig('H:\SD-II\04-1167\04-1167\LabchartECG.edf', 'ref',[] ,'refoptions',{'keepref' 'on'});
-        EEG.data = measurement_data; % Assign data loaded in line 43 to EEG structure
+        % Assign data loaded in line 46 to EEG structure
+        EEG.data = measurement_data; 
         EEG.times = time_vector*1000; % time in ms
         EEG.nbchan = size(measurement_data,1); % Measure number of channels
         EEG.comments = []; % Initialize comments vector
@@ -82,11 +91,13 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
         EEG.xmax = time_vector(end);
         EEG.pnts = size(time_vector,2);  % Find total number of data points
         EEG.etc.T0 = datevec(start_date_time);  % Record start time 
-        for i=1:size(EEG.data,1)  % Label channels names via info from comp elements
+        for i=1:size(EEG.data,1)  
+            % Label channels names via info from comp elements
             EEG.chanlocs(i).labels = char(comp_elements(i));
-            %    EEG.chanlocs(i).urchan = i;
+            % EEG.chanlocs(i).urchan = i;
         end
-        EEG = eeg_checkset( EEG ); % eeglab call to ensure data is formatted correctly 
+        % eeglab function to ensure data is formatted correctly 
+        EEG = eeg_checkset( EEG ); 
         % Load channel location information based on standard 10-5 configuration 
         EEG=pop_chanedit(EEG, 'lookup',[eegpath '/plugins/dipfit/standard_BESA/standard-10-5-cap385.elp']); 
         
@@ -383,57 +394,67 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
         
         %Insert CSD events (15min duration assumed for CSD episode):
         T = readtable('Pitt ECoG SD-II.xls'); % Read excel file containing 'CSD Ground Truth Events'
-        T = T(9:end,:);
-        CSD_ind = find(start_date_time<T.Date_Time);
-        T = T(CSD_ind,:);
+        T = T(9:end,:); % Trim file so only CSD events remain
+        CSD_ind = find(start_date_time<T.Date_Time); % Find events in range of Session
+        T = T(CSD_ind,:); % Filter out events not in range 
+        % Use 'between' to find time difference of DateTime varaibles
+        % Convert into 'characters' (similar to a string)
         CSD_stamps = char(between(start_date_time,T.Date_Time));
-        for i=1:size(T,1)
-            Delta_To = CSD_stamps(i,:);
-            m_ind = strfind(Delta_To,'m');
-            h_uind = strfind(Delta_To,'h');
-            d_ind = strfind(Delta_To,'d');
-            space_ind = strfind(Delta_To,' ');
-            h_lind = space_ind(find(h_uind>space_ind, 1, 'last' ));
-            if(isempty(d_ind))
-                
+        for i=1:size(T,1) % Loop through all events in range of Session
+            Delta_To = CSD_stamps(i,:); % Load event 'i' as Delta_To
+            m_ind = strfind(Delta_To,'m'); % Find index representing minutes 
+            h_uind = strfind(Delta_To,'h'); % Find index representing hours 
+            d_ind = strfind(Delta_To,'d'); % Find index representing days 
+            space_ind = strfind(Delta_To,' '); % Find index representing space 
+            h_lind = space_ind(find(h_uind>space_ind, 1, 'last' )); % Find last space index before the hour index
+            if(isempty(d_ind)) % Check if DateTime has a Day component 
+                % Using indices from above convert DateTime into numeric
+                % latency dt_i
                 dt_i = str2double(Delta_To(m_ind+2:end-1)) + str2double(Delta_To(h_uind+2:m_ind-1))*60 + ...
                     str2double(Delta_To(h_lind+1:h_uind-1))*60*60;
-            else
+            else % If a Day component is found, use block below
                 dt_i = str2double(Delta_To(m_ind+2:end-1)) + str2double(Delta_To(h_uind+2:m_ind-1))*60 + ...
                     str2double(Delta_To(h_lind+1:h_uind-1))*60*60 + str2double(Delta_To(d_ind-1))*24*60*60;
             end
-            if(dt_i>=EEG.xmin)
+            if(dt_i>=EEG.xmin) % Ensure dt_i is within range of the Session
+                % Add CSD event with dt_i as latency
                 EEG = pop_editeventvals(EEG,'insert',{1,[],[],[]},'changefield',{1,'type',char(T.Comment(i))},'changefield',{1,'latency',dt_i},'changefield',{1,'duration',900});
             end
             
         end
         
         [ALLEEG EEG] = eeg_store(ALLEEG, EEG, CURRENTSET);
-        
+        % Seperate out EEG data from Physio Data
         EEG_Only = pop_select( EEG,'nochannel',{'ECG' 'RESP' 'PLETH'});
+        % Visualize EEG data
         pop_eegplot( EEG_Only, 1, 1, 1);
-        
+        % Seperate out Physio data from EEG Data
         All_Physio = pop_select( EEG,'channel',{'ECG' 'RESP' 'PLETH'});
-        
+        % Notch filter Physio Data around 60 Hz
         All_Physio = pop_eegfiltnew(All_Physio, 58,62,1000,1,[],1);
+        % Reappend notch filtered Physio data back to EEG variable
         EEG.data(end-2:end,:) = All_Physio.data;
-        
+        % Calculate mean of Channels Fp1, Fp2 & add to EEG variable
         EEG.data(end+1,:) = mean(EEG.data(8:9,:),1);
+        % Calculate difference of Channels Fp1, Fp2 & add to EEG varaible
         EEG.data(end+1,:) = EEG.data(8,:) - EEG.data(9,:);
+        % Update number of channels to account for new channels 
         EEG.nbchan = size(EEG.data,1);
-        if ~isempty(EEG.chanlocs)
+        if ~isempty(EEG.chanlocs) % Add labels for newly calculated channels
             EEG.chanlocs(end+1).labels = 'EOGv';
             EEG.chanlocs(end+1).labels = 'EOGh';
         end
-        
+        % Seperate new channels EOGh and EOGv for filtering
         EOG = pop_select( EEG,'channel',{'EOGh' 'EOGv'});
+        % Bandpass filter reference channels between [0.1-20 Hz]
         EOG = pop_eegfiltnew(EOG, 0.1,20,10000,0,[],1);
+        % Add filtered channels back to EEG variable
         EEG.data(end-1:end,:) = EOG.data;
-        
+        % Perform one final formatting check on EEG variable
         EEG = eeg_checkset( EEG );
+        % Save 'part' specific file of filtered data and events 
         EEG = pop_saveset( EEG, 'filename',[Name , '_preica_withDC.set'],'filepath',current_path);
         close all
-        
         
     end
     
