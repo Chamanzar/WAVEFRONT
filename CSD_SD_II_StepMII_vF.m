@@ -46,7 +46,7 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
         for cc = 1:size(comp_elements,2)
             Q_events = zeros(size(time_vector));
             Q_events(ismember(time_vector,data_qual_time))=1000;
-            fid =  fopen('Event.txt');  % Load 'Event.txt' which contains 'CSD Ground Truth' information
+            fid =  fopen('Event.txt');  % Load 'Event.txt' which contain clinical annotations 
             Event_time_tot = [];  % Initialize vectors for storing event data
             Event_label_tot = [];
             Events = textscan(fid,'%s','Delimiter',{'*'});  % Read events properly based on input file
@@ -354,30 +354,35 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
         end
         
         EEG_pruned = pop_select(EEG,'point',[2,size(EEG.data,2)]); % EEG Pruned is a copy of EEG but with first data point removed
-        EEG.event = EEG_pruned.event;
-        EEG.event.type = 'Dummy';
-        EEG.event.latency = 0;
+        EEG.event = EEG_pruned.event; % Populate EEG.event with desired fields 
+        EEG.event.type = 'Dummy'; % Override loaded fields with 'dummy' values
+        EEG.event.latency = 0; % Dummy value of 0 for latency & duration
         EEG.event.duration = 0;
+        % Similar to before, save start date in proper format, but may need
+        % to edit 'MMMM' to 'MMM' inside datetime command 
         start_date_time = datetime(start_date_time,'Format','dd MMMM yyyy, HH:mm:ss.SSS');
         
         %Insert quality and other events:
-        for j=1%:size(data_qual_str_EEG,1)
-            for i=1:size(data_qual_str_EEG(j,:),2)
-                if(data_qual_time_EEG(i)>=EEG.xmin)
+        % First loop through 'Quality Events', which are discriptions of
+        % recording signal quality 
+        for j=1 % Columns of data_qual_str_EEG are redundant
+            for i=1:size(data_qual_str_EEG(j,:),2) % only loop through rows
+                if(data_qual_time_EEG(i)>=EEG.xmin) % Ensure the event time is within the session time range
+                    % If event is in range, update event fields accordingly
                     EEG = pop_editeventvals(EEG,'insert',{1,[],[],[]},'changefield',{1,'type',char(data_qual_str_EEG(j,i))},'changefield',{1,'latency',data_qual_time_EEG(i)},'changefield',{1,'duration',1});
                 end
             end
         end
-        
-        for i=1:size(Event_time_tot,1)
-            if(Event_time_tot(i)>=EEG.xmin)
+        % Next loop through Clinical Annotations Events
+        for i=1:size(Event_time_tot,1) % Loop through each 'i' Event_time
+            if(Event_time_tot(i)>=EEG.xmin) % Ensure the event time is within the session time range
+                % If event is in range, update event fields accordingly
                 EEG = pop_editeventvals(EEG,'insert',{1,[],[],[]},'changefield',{1,'type',char(Event_label_tot(i))},'changefield',{1,'latency',Event_time_tot(i)},'changefield',{1,'duration',1});
             end
         end
         
-        
         %Insert CSD events (15min duration assumed for CSD episode):
-        T = readtable('Pitt ECoG SD-II.xls');
+        T = readtable('Pitt ECoG SD-II.xls'); % Read excel file containing 'CSD Ground Truth Events'
         T = T(9:end,:);
         CSD_ind = find(start_date_time<T.Date_Time);
         T = T(CSD_ind,:);
