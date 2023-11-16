@@ -32,49 +32,58 @@ for ss = 1:Sessions_size
     cd(Session_names(ss).name)
     % Load Session-specific Impdence Data 
     EEG_Imp = dir('EEG,Composite,Impedance,*.mat')
+    % Begin by loading first EEG Impedence File
     load(EEG_Imp(1).name)
     % Assign loaded variables as 'Impedance' Variables 
     comp_elements_Imp = comp_elements;
     measurement_data_Imp = measurement_data;
     time_vector_Imp = time_vector;
     Imp_srate = 1/(time_vector_Imp(2) - time_vector_Imp(1));
-    
+    % If more than one Impedance file is present, append all information
     for Imp_ind = 2:size(EEG_Imp,1)
-    load(EEG_Imp(Imp_ind).name)
-    measurement_data_Imp = cat(2,measurement_data_Imp,measurement_data);
-    time_vector_Imp = cat(2,time_vector_Imp,time_vector);
+        load(EEG_Imp(Imp_ind).name)
+        measurement_data_Imp = cat(2,measurement_data_Imp,measurement_data);
+        time_vector_Imp = cat(2,time_vector_Imp,time_vector);
     end 
-    current_path = pwd;
+    current_path = pwd; % Ensure pathing is still correct
+    % Find all ECoG files for given Session
     ECoG_Part_names = dir('*_ECoG_filtered_withDC.set');
     
     current_path = pwd;
+    % Find all 'preICA w DC' files which represent our EEG data
     Part_names = dir('*_preica_withDC.set');
     Part_name_char = string({Part_names.name});
-    %Remove possible files in the directory to prevent nested merging process:
+    % Remove possible 'extra' files in the directory to prevent nested merging process:
     part_woGamma_ind = find(contains(Part_name_char,'_woGamma_preica_withDC.set'));
     Part_name_char(part_woGamma_ind) = [];
     Part_names(part_woGamma_ind) = [];
-    
+    % Measure number of Parts for given Session
     Part_size = size(Part_names,1);
+    % Find indices of specific parts of file name
     part_ind = strfind(Part_name_char,'part');
     of_ind = strfind(Part_name_char,'of');
     preica_ind = strfind(Part_name_char,'_preica');
-    Part_num = [];
+    Part_num = [];  % Initialize list of Part Numbers
     for i=1:Part_size
+        % Using string locations from above, create list of part numbers
         Part_num = cat(1,Part_num,str2double(Part_name_char{i}(part_ind{i}+4:of_ind{i}-1)));
     end
-    AllEEG = [];
-    [~,Part_ind] = sort(Part_num);
-    measurement_data_Imp_temp = [];
-    
+    AllEEG = []; % Initilize 'ALLEEG' variable for merging parts
+    [~,Part_ind] = sort(Part_num); % Ensure Part numbers are in correct order
+    measurement_data_Imp_temp = []; % Initialize list for imp_data
+    % Load a sample EEG data file for channel order information
     EEG_test = pop_loadset('filename',Part_names(Part_ind(1)).name,'filepath',current_path);
     EEG_test = pop_select( EEG_test,'nochannel',{'Depth1' 'Depth2' 'Depth3' 'Depth4' 'Depth5' 'Depth6'});
     Imp_ind = [];
+    % Find channels which overlap b/w EEG data and Impedence Data
     for el = 1:19
         Imp_ind = cat(1,Imp_ind,find(contains(comp_elements_Imp,EEG_test.chanlocs(el).labels)));
     end
+    % Only keep Impedence Channels which overlap with EEG Channls
     measurement_data_Imp = measurement_data_Imp(Imp_ind,:);
+    % Check for any overlapping time index differences
     [time_vector_Imp,ind] = unique(time_vector_Imp);
+    % Remove any overlapping time points from Impedance data
     measurement_data_Imp = measurement_data_Imp(:,ind);
     
     for pp = 1: Part_size
