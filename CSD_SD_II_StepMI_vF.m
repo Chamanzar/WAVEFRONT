@@ -85,20 +85,26 @@ for ss = 1:Sessions_size
     [time_vector_Imp,ind] = unique(time_vector_Imp);
     % Remove any overlapping time points from Impedance data
     measurement_data_Imp = measurement_data_Imp(:,ind);
-    
+    % Loop through all 'parts' of Session
     for pp = 1: Part_size
         Part_names(Part_ind(pp)).name
-        
+        % Load specific EEG part file 'pp'
         EEG = pop_loadset('filename',Part_names(Part_ind(pp)).name,'filepath',current_path);
+        % Remove some unnecessary channels from EEG data
         EEG = pop_select( EEG,'nochannel',{'Depth1' 'Depth2' 'Depth3' 'Depth4' 'Depth5' 'Depth6'});
+        % Load specific ECoG part file 'pp'
         ECoG = pop_loadset('filename',ECoG_Part_names(Part_ind(pp)).name,'filepath',current_path);
-     
+        % Perfrom lowpass Filtering on EEG Data below 30Hz
         EEG = pop_eegfiltnew(EEG, [],30,1000,0,[],0);
+        % Resample EEG data from 256 Hz down to 64 Hz
         [EEG_resample] = pop_resample(EEG, 64);
+        % Save resampled EEG data back to main EEG variable
         EEG = EEG_resample;
-        
+        % Perform lowpass Filtering on ECoG Data below 30Hz 
         ECoG = pop_eegfiltnew(ECoG, [],30,1000,0,[],0);
+        % Resample ECoG Data from 256 to 64 Hz
         [ECoG_resample] = pop_resample(ECoG, 64);
+        % Save resampled ECoG data back to main ECoG variable
         ECoG = ECoG_resample;
 
         %% Remove poor data equality events:

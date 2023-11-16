@@ -71,22 +71,28 @@ for ss = 1:Sessions_size
     AllEEG = []; % Initilize 'ALLEEG' variable for merging parts
     [~,Part_ind] = sort(Part_num); % Ensure Part numbers are in correct order
     measurement_data_Imp_temp = []; % Initialize list for imp_data
-    % Load a sample 
+    % Load a sample EEG data file for channel order information
     EEG_test = pop_loadset('filename',Part_names(Part_ind(1)).name,'filepath',current_path);
     EEG_test = pop_select( EEG_test,'nochannel',{'Depth1' 'Depth2' 'Depth3' 'Depth4' 'Depth5' 'Depth6'});
     Imp_ind = [];
+    % Find channels which overlap b/w EEG data and Impedence Data
     for el = 1:19
         Imp_ind = cat(1,Imp_ind,find(contains(comp_elements_Imp,EEG_test.chanlocs(el).labels)));
     end
+    % Only keep Impedence Channels which overlap with EEG Channls
     measurement_data_Imp = measurement_data_Imp(Imp_ind,:);
+    % Check for any overlapping time index differences
     [time_vector_Imp,ind] = unique(time_vector_Imp);
+    % Remove any overlapping time points from Impedance data
     measurement_data_Imp = measurement_data_Imp(:,ind);
-    
+    % Loop through all 'parts' of Session
     for pp = 1: Part_size
         Part_names(Part_ind(pp)).name
-        
+        % Load specific EEG part file 'pp'
         EEG = pop_loadset('filename',Part_names(Part_ind(pp)).name,'filepath',current_path);
+        % Remove some unnecessary channels from EEG data
         EEG = pop_select( EEG,'nochannel',{'Depth1' 'Depth2' 'Depth3' 'Depth4' 'Depth5' 'Depth6'});
+        % Load specific ECoG part file 'pp'
         ECoG = pop_loadset('filename',ECoG_Part_names(Part_ind(pp)).name,'filepath',current_path);
      
         EEG = pop_eegfiltnew(EEG, [],30,1000,0,[],0);
