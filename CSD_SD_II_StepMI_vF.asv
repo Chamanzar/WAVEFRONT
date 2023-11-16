@@ -30,10 +30,10 @@ median_Imp_tot = median_Imp;
 for ss = 1:Sessions_size
     % Enter Session specific folder for each Session loop
     cd(Session_names(ss).name)
-    % Load Session-specific Impdence Data 
+    % Load Session-specific
     EEG_Imp = dir('EEG,Composite,Impedance,*.mat')
     load(EEG_Imp(1).name)
-    % Assign loaded variables as 'Impedance' Variables 
+    
     comp_elements_Imp = comp_elements;
     measurement_data_Imp = measurement_data;
     time_vector_Imp = time_vector;
