@@ -76,7 +76,7 @@ for ss = 1:Sessions_size
     EEG_test = pop_loadset('filename',Part_names(Part_ind(1)).name,'filepath',current_path);
     EEG_test = pop_select( EEG_test,'nochannel',{'Depth1' 'Depth2' 'Depth3' 'Depth4' 'Depth5' 'Depth6'});
     Imp_ind = [];
-
+    
     % Find channels which overlap b/w EEG data and Impedence Data
     for el = 1:19
         Imp_ind = cat(1,Imp_ind,find(contains(comp_elements_Imp,EEG_test.chanlocs(el).labels)));
@@ -113,30 +113,6 @@ for ss = 1:Sessions_size
         ECoG = pop_eegfiltnew(ECoG, [],30,1000,0,[],0);
         [ECoG_resample] = pop_resample(ECoG, 64);
         ECoG = ECoG_resample;
-
-        %% Remove poor data equality events:
-        % Commented out code below no longer used for output generation
-        % Remove_ind = find(strcmp({EEG.event(:).type},'Electrode Impedance Uncertain') | ...
-        %     strcmp({EEG.event(:).type},'Electrode Impedance High') | ...
-        %     strcmp({EEG.event(:).type},'Electrode Impedance Abnormal Low') | ...
-        %     strcmp({EEG.event(:).type},'Electrode Impedance Imbalance'));
-        % Norm_ind = find(strcmp({EEG.event(:).type},'Data Quality Normal'));
-        % 
-        % Remove_latency = [EEG.event(Remove_ind).latency];
-        % Norm_latency= [EEG.event(Norm_ind).latency];
-        % 
-        % eerej_vec = [-1,-1];%dummy value
-        % for ee=1:size(Remove_latency,2)
-        %     if(Remove_latency(ee)>eerej_vec(end,2))
-        %         ind_temp = find(Norm_latency>Remove_latency(ee));
-        %         if(~isempty(ind_temp))
-        %             eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),Norm_latency(ind_temp(1))]);
-        %         else
-        %             eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),EEG.pnts]);
-        %         end
-        %     end
-        % end
-        % eerej_vec(1,:) = [];%dummy value 
         
         % Find where Imp vector begins and ends relative to specific part
         Imp_strt = find(time_vector_Imp>=EEG.xmin-10);
