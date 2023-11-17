@@ -90,21 +90,25 @@ for ss = 1:Sessions_size
         Part_names(Part_ind(pp)).name
         % Load specific EEG part file 'pp'
         EEG = pop_loadset('filename',Part_names(Part_ind(pp)).name,'filepath',current_path);
+        
         % Remove some unnecessary channels from EEG data
         EEG = pop_select( EEG,'nochannel',{'Depth1' 'Depth2' 'Depth3' 'Depth4' 'Depth5' 'Depth6'});
+        
         % Load specific ECoG part file 'pp'
         ECoG = pop_loadset('filename',ECoG_Part_names(Part_ind(pp)).name,'filepath',current_path);
+        
         % Perfrom lowpass Filtering on EEG Data below 30Hz
         EEG = pop_eegfiltnew(EEG, [],30,1000,0,[],0);
+        
         % Resample EEG data from 256 Hz down to 64 Hz
         [EEG_resample] = pop_resample(EEG, 64);
+        
         % Save resampled EEG data back to main EEG variable
         EEG = EEG_resample;
-        % Perform lowpass Filtering on ECoG Data below 30Hz 
+        
+        % Repeat Steps for ECoG Data
         ECoG = pop_eegfiltnew(ECoG, [],30,1000,0,[],0);
-        % Resample ECoG Data from 256 to 64 Hz
         [ECoG_resample] = pop_resample(ECoG, 64);
-        % Save resampled ECoG data back to main ECoG variable
         ECoG = ECoG_resample;
 
         %% Remove poor data equality events:
@@ -135,11 +139,12 @@ for ss = 1:Sessions_size
         Imp_strt = Imp_strt(1);
         Imp_end = find(time_vector_Imp<=EEG.xmax+10);
         Imp_end = Imp_end(end);
+
         % This next line does several things at once, it first uses
         % imp_start and imp_end to trim Impedance data to appropriate time
         % range. It then interpolates the impedance data so that it is of
-        % equal length to the EEG data vector, finally it appends the data
-        % to a Session-wide
+        % equal length to the EEG data vector, finally it appends the 
+        % part specific data to a Session-specific 'storage' variable 
         measurement_data_Imp_temp = cat(2,measurement_data_Imp_temp,interp1(time_vector_Imp(Imp_strt:Imp_end)*1000,measurement_data_Imp(:,Imp_strt:Imp_end)',EEG.times,'pchip')');
         
         EEG.urevent = {};
