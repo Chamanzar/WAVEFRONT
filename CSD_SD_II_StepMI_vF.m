@@ -117,7 +117,7 @@ for ss = 1:Sessions_size
         
         % NOTE: Be congnizent of eeglab version differences during this
         % section
-        
+
         % Find where Imp vector begins and ends relative to specific part
         Imp_strt = find(time_vector_Imp>=EEG.xmin-10);
         Imp_strt = Imp_strt(1);
@@ -147,32 +147,40 @@ for ss = 1:Sessions_size
     data_temp = AllEEG.data(1:19,:);
     measurement_data_Imp_temp_copy = measurement_data_Imp_temp;
     
-    for rep_i=1:1
-    median_Imp = median(measurement_data_Imp_temp_copy,2);
-    quantile_Imp = quantile(measurement_data_Imp_temp_copy,0.9,2);
-    thr_Imp = 2;
-    for ch_i=1:19
-        eerej_vec = measurement_data_Imp_temp_copy(ch_i,:)>thr_Imp*min(median_Imp(ch_i),median_Imp_tot);
-        eerej_vec_comp = bwconncomp(eerej_vec);
-        for comp_ind=1:eerej_vec_comp.NumObjects
-            data_temp(ch_i,max(1,eerej_vec_comp.PixelIdxList{1,comp_ind}(1))...
-                :min(size(data_temp,2),eerej_vec_comp.PixelIdxList{1,comp_ind}(end))) = 0;
-            measurement_data_Imp_temp_copy(ch_i,max(1,eerej_vec_comp.PixelIdxList{1,comp_ind}(1))...
-                :min(size(measurement_data_Imp_temp_copy,2),eerej_vec_comp.PixelIdxList{1,comp_ind}(end))) = 0;
+    for rep_i=1:1 % Option to perform itterative impedance filtering
+        % At each channel find median impedance and 90% percentile 
+        median_Imp = median(measurement_data_Imp_temp_copy,2);
+        quantile_Imp = quantile(measurement_data_Imp_temp_copy,0.9,2);
+        thr_Imp = 2; % Set impedance threshold
+        for ch_i=1:19
+            % At each channel find time points where impedance is greater
+            % than (thr_Imp * min(median_imp(chan), median_imp_tot))
+            eerej_vec = measurement_data_Imp_temp_copy(ch_i,:)>thr_Imp*min(median_Imp(ch_i),median_Imp_tot);
+            % Find connected regions of valid data 
+            eerej_vec_comp = bwconncomp(eerej_vec);
+
+            % Reject data in between valid regions 
+            for comp_ind=1:eerej_vec_comp.NumObjects
+                data_temp(ch_i,max(1,eerej_vec_comp.PixelIdxList{1,comp_ind}(1))...
+                    :min(size(data_temp,2),eerej_vec_comp.PixelIdxList{1,comp_ind}(end))) = 0;
+                measurement_data_Imp_temp_copy(ch_i,max(1,eerej_vec_comp.PixelIdxList{1,comp_ind}(1))...
+                    :min(size(measurement_data_Imp_temp_copy,2),eerej_vec_comp.PixelIdxList{1,comp_ind}(end))) = 0;
+            end
         end
+        % Zero out any points of eeg data at which imp data is negative
+        data_temp(measurement_data_Imp_temp_copy<=0) = 0;
     end
-    data_temp(measurement_data_Imp_temp_copy<=0) = 0;
-    end
+    % Save impedance filtered data back to session specific AllEEG variable 
     AllEEG.data(1:19,:) = data_temp;
 
-%% 
+%% % Visualize EEG data 
     pop_eegplot(AllEEG, 1, 1, 1)
-
+    % save Impedance data matrix and EEG and ECoG structs 
     save([Session_names(ss).name,'_woGamma_preica_Imp.mat'],'measurement_data_Imp_temp_copy','-v7.3')
     EEG = pop_saveset( AllEEG, 'filename',[Session_names(ss).name,'_woGamma_preica_withDC_vII.set'],'filepath',current_path);
     ECoG = pop_saveset( AllECoG, 'filename',[Session_names(ss).name,'_woGamma_ECoG_withDC_vII.set'],'filepath',current_path);
 
-    cd ..
+    cd .. % Loop out of Session specific folder 
 end
 
 
