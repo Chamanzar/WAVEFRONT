@@ -48,7 +48,6 @@ for ss = 1:Sessions_size
     current_path = pwd; % Ensure pathing is still correct
     % Find all ECoG files for given Session
     ECoG_Part_names = dir('*_ECoG_filtered_withDC.set');
-    
     current_path = pwd;
     % Find all 'preICA w DC' files which represent EEG data
     Part_names = dir('*_preica_withDC.set');
@@ -64,6 +63,7 @@ for ss = 1:Sessions_size
     of_ind = strfind(Part_name_char,'of');
     preica_ind = strfind(Part_name_char,'_preica');
     Part_num = [];  % Initialize list of Part Numbers
+
     for i=1:Part_size
         % Using string locations from above, create list of part numbers
         Part_num = cat(1,Part_num,str2double(Part_name_char{i}(part_ind{i}+4:of_ind{i}-1)));
@@ -89,6 +89,7 @@ for ss = 1:Sessions_size
     % Remove any overlapping time points from Impedance data
     measurement_data_Imp = measurement_data_Imp(:,ind);
     % Loop through all 'parts' of Session
+
     for pp = 1: Part_size
         Part_names(Part_ind(pp)).name
         % Load specific EEG part file 'pp'
@@ -114,6 +115,9 @@ for ss = 1:Sessions_size
         [ECoG_resample] = pop_resample(ECoG, 64);
         ECoG = ECoG_resample;
         
+        % NOTE: Be congnizent of eeglab version differences during this
+        % section
+        
         % Find where Imp vector begins and ends relative to specific part
         Imp_strt = find(time_vector_Imp>=EEG.xmin-10);
         Imp_strt = Imp_strt(1);
@@ -138,10 +142,11 @@ for ss = 1:Sessions_size
         end
     end
     
-    
+    % Trim first 5 seconds of data and padd end with zeros
     measurement_data_Imp_temp = cat(2,measurement_data_Imp_temp(:,320:end),100*ones(19,319));
     data_temp = AllEEG.data(1:19,:);
     measurement_data_Imp_temp_copy = measurement_data_Imp_temp;
+    
     for rep_i=1:1
     median_Imp = median(measurement_data_Imp_temp_copy,2);
     quantile_Imp = quantile(measurement_data_Imp_temp_copy,0.9,2);
