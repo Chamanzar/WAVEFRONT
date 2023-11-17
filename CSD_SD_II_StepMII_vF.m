@@ -423,7 +423,7 @@ for ss = 1:Sessions_size  % Loop through all sessions for pateint ID
             
         end
         
-        [ALLEEG EEG] = eeg_store(ALLEEG, EEG, CURRENTSET);
+        % [ALLEEG EEG] = eeg_store(ALLEEG, EEG, CURRENTSET);
         % Seperate out EEG data from Physio Data
         EEG_Only = pop_select( EEG,'nochannel',{'ECG' 'RESP' 'PLETH'});
         % Visualize EEG data

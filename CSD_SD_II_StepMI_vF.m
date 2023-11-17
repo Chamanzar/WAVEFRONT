@@ -108,31 +108,39 @@ for ss = 1:Sessions_size
         ECoG = ECoG_resample;
 
         %% Remove poor data equality events:
-        Remove_ind = find(strcmp({EEG.event(:).type},'Electrode Impedance Uncertain') | ...
-            strcmp({EEG.event(:).type},'Electrode Impedance High') | ...
-            strcmp({EEG.event(:).type},'Electrode Impedance Abnormal Low') | ...
-            strcmp({EEG.event(:).type},'Electrode Impedance Imbalance'));
-        Norm_ind = find(strcmp({EEG.event(:).type},'Data Quality Normal'));
-        
-        Remove_latency = [EEG.event(Remove_ind).latency];
-        Norm_latency= [EEG.event(Norm_ind).latency];
-        
-        eerej_vec = [-1,-1];%dummy value
-        for ee=1:size(Remove_latency,2)
-            if(Remove_latency(ee)>eerej_vec(end,2))
-                ind_temp = find(Norm_latency>Remove_latency(ee));
-                if(~isempty(ind_temp))
-                    eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),Norm_latency(ind_temp(1))]);
-                else
-                    eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),EEG.pnts]);
-                end
-            end
-        end
-        eerej_vec(1,:) = [];%dummy value        
+        % Commented out code below no longer used for output generation
+        % Remove_ind = find(strcmp({EEG.event(:).type},'Electrode Impedance Uncertain') | ...
+        %     strcmp({EEG.event(:).type},'Electrode Impedance High') | ...
+        %     strcmp({EEG.event(:).type},'Electrode Impedance Abnormal Low') | ...
+        %     strcmp({EEG.event(:).type},'Electrode Impedance Imbalance'));
+        % Norm_ind = find(strcmp({EEG.event(:).type},'Data Quality Normal'));
+        % 
+        % Remove_latency = [EEG.event(Remove_ind).latency];
+        % Norm_latency= [EEG.event(Norm_ind).latency];
+        % 
+        % eerej_vec = [-1,-1];%dummy value
+        % for ee=1:size(Remove_latency,2)
+        %     if(Remove_latency(ee)>eerej_vec(end,2))
+        %         ind_temp = find(Norm_latency>Remove_latency(ee));
+        %         if(~isempty(ind_temp))
+        %             eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),Norm_latency(ind_temp(1))]);
+        %         else
+        %             eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),EEG.pnts]);
+        %         end
+        %     end
+        % end
+        % eerej_vec(1,:) = [];%dummy value 
+        % Find where Imp vector begins and ends relative to specific part
         Imp_strt = find(time_vector_Imp>=EEG.xmin-10);
         Imp_strt = Imp_strt(1);
         Imp_end = find(time_vector_Imp<=EEG.xmax+10);
         Imp_end = Imp_end(end);
+        
+        % This next line does several things at once, it first uses
+        % imp_start and imp_end to trim Impedance data to appropriate time
+        % range. It then interpolates the impedance data so that it is of
+        % equal length to the EEG data vector, finally it appends the 
+        % part specific data to a Session-specific 'storage' variable 
         measurement_data_Imp_temp = cat(2,measurement_data_Imp_temp,interp1(time_vector_Imp(Imp_strt:Imp_end)*1000,measurement_data_Imp(:,Imp_strt:Imp_end)',EEG.times,'pchip')');
         
         EEG.urevent = {};
