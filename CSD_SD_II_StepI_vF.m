@@ -14,19 +14,33 @@ clc
 % Copyright: This project is licensed - see the LICENSE.md file for details
 
 %% Initialization:
-
 % cd 'H:\SD-II_POST_ICA\SD-II\04-1203\04-1203'
 
+eegpath = 'C:\Users\Alireza\Downloads\eeglab_current\eeglab2020_0';
+current_path = pwd;
+cd(eegpath)
+eeglab  
+% Similar to previous steps, ensure eeglab is running and initialize path
+
+% Find all Sessions of chosen Patient ID
 Session_names = dir('Patient*');
 Sessions_size = size(Session_names,1);
 
+% Loop through all sessions of Patient ID
 for ss = 1:Sessions_size
+    
+    % Enter Session-specific directory 
     cd(Session_names(ss).name)
     current_path = pwd;
+    % Load 'Visualization' file which contains Session-wide EEG & ECoG data
     EEG_vis = pop_loadset('filename',[Session_names(ss).name,'_Visualization_withDC_vII.set'],'filepath',current_path);
     
+    % Find any instances of 'nan' within the data
     [ind_r,ind_c] = find(isnan(EEG_vis.data));
+    % Zero anywhere the data is 'NaN'
     EEG_vis.data(ind_r,ind_c) = 0;
+
+    % Filter EEG data to extract the delta frequency band 
     EEG_vis = pop_eegfiltnew(EEG_vis, 0.5,4,10000,0,[],1);
     
     EEG_sub = EEG_vis.data(end-5:end,:);
