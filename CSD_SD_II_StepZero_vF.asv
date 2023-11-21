@@ -48,7 +48,7 @@ for ss = 1:Sessions_size
     Part_size = size(Part_names,1);
     ECoG = pop_loadset('filename',Part_names(1).name,'filepath',current_path);
     
-    srate = EEG.srate; % Read sampling rate from EEG struct
+    % srate = EEG.srate; % Read sampling rate from EEG struct
     
     % In the next block of code we number our CSD events
     CSD_Labels = []; % Initialize a vector for CSD Labels
@@ -59,19 +59,22 @@ for ss = 1:Sessions_size
                 strcmp(EEG.event(i).type,'ISD') || strcmp(EEG.event(i).type,'scCSD'))
             % At each 'SD' event, ennumerate beginging of event label
             EEG.event(i).type = [sprintf('%d_',CSD_ind) EEG.event(i).type];
+            % Store SD Labels for tracking/'visulzing' SD events 
             CSD_Labels = cat(1,CSD_Labels,EEG.event(i));
+            % Update numerical prefix for each new SD
             CSD_ind = CSD_ind+1;
         end
     end
-    
+    % Mask any region of the data where Impedance is negative 
     EEG.data(measurement_data_Imp_temp_copy<=0) = 0;
-    
+
+    % Visualize EEG data
     figure;plot(EEG.data(1,:))
    
     
      %%
      % This code block is a 'dead-end' block, thus it is commented out 
-     
+
     % CSD_Labels = [];
     % Other_Labels = [];
     % WL = 5*60*srate;
@@ -96,12 +99,16 @@ for ss = 1:Sessions_size
     
     % sensor_locs = [EEG.chanlocs.X;EEG.chanlocs.Y;EEG.chanlocs.Z]';
     
-    % Add the ECoG channels to EEG:
+    % Add the ECoG channels to EEG structure:
     for ECoG_ind=1:6
         EEG.data(end+1,:) = ECoG.data(ECoG_ind,:);
     end
+
+    % Update 'number of chans' to account for newly added ECoG channels
     EEG.nbchan = size(EEG.data,1);
-    if ~isempty(EEG.chanlocs)
+
+    % Add appropriate label at each new ECoG Channel
+    if ~isempty(EEG.chanlocs) 
         EEG.chanlocs(end+1).labels = 'ECoG_1';
         EEG.chanlocs(end+1).labels = 'ECoG_2';
         EEG.chanlocs(end+1).labels = 'ECoG_3';
@@ -110,8 +117,9 @@ for ss = 1:Sessions_size
         EEG.chanlocs(end+1).labels = 'ECoG_6';
     end
     
-    eeglab redraw
-    pop_eegplot( EEG, 1, 1, 1);
+    eeglab redraw % Refresh eeglab graphical interface
+    pop_eegplot( EEG, 1, 1, 1); % Replot data to visualize EEG + ECoG data
+    
     
     EEG = pop_saveset( EEG, 'filename',[Session_names(ss).name,'_Visualization_withDC_vII.set'],'filepath',current_path);
 
