@@ -48,13 +48,16 @@ for ss = 1:Sessions_size
     Part_size = size(Part_names,1);
     ECoG = pop_loadset('filename',Part_names(1).name,'filepath',current_path);
     
-    srate = EEG.srate; 
+    srate = EEG.srate; % Read sampling rate from EEG struct
     
-    CSD_Labels = [];
-    CSD_ind = 1;
-    for i=1:size(EEG.event,2)
+    % In the next block of code we number our CSD events
+    CSD_Labels = []; % Initialize a vector for CSD Labels
+    CSD_ind = 1; % Start CSD counting at 1
+    for i=1:size(EEG.event,2) % Loop through all events
+        % find 'Spreading Depolarization' events
         if(strcmp(EEG.event(i).type,'CSD') || strcmp(EEG.event(i).type,'CSD/ISD') ||...
                 strcmp(EEG.event(i).type,'ISD') || strcmp(EEG.event(i).type,'scCSD'))
+            % At each 'SD' event, ennumerate beginging of event label
             EEG.event(i).type = [sprintf('%d_',CSD_ind) EEG.event(i).type];
             CSD_Labels = cat(1,CSD_Labels,EEG.event(i));
             CSD_ind = CSD_ind+1;
@@ -67,27 +70,29 @@ for ss = 1:Sessions_size
    
     
      %%
-    CSD_Labels = [];
-    Other_Labels = [];
-    WL = 5*60*srate;
-    CSD_GT_total = zeros(1,size(EEG.data,2));
-    Event_total = zeros(1,size(EEG.data,2));
-    CSD_Labels_total = [];
-    Event_Labels_total = [];
-    for i=1:size(EEG.event,2)
-        if(contains(EEG.event(i).type,'CSD') || contains(EEG.event(i).type,'CSD/ISD') ||...
-                contains(EEG.event(i).type,'ISD') || contains(EEG.event(i).type,'scCSD'))
-            EEG.event(i).latency = EEG.event(i).latency;
-            CSD_Labels = cat(1,CSD_Labels,EEG.event(i));
-            CSD_GT_total(round(max(EEG.event(i).latency,1)))=1;
-            CSD_Labels_total = cat(1,CSD_Labels_total,{EEG.event(i).type});
-        else%if(~(strcmp(EEG.event(i).type,'boundary')))% || strcmp(EEG.event(i).type,'Data Quality Normal')))
-            EEG.event(i).latency = EEG.event(i).latency;
-            Other_Labels = cat(1,Other_Labels,EEG.event(i));
-            Event_total(round(max(EEG.event(i).latency,1)))=1;
-            Event_Labels_total = cat(1,Event_Labels_total,{EEG.event(i).type});
-        end
-    end
+     % This code block is a 'dead-end' block, thus it is commented out 
+     
+    % CSD_Labels = [];
+    % Other_Labels = [];
+    % WL = 5*60*srate;
+    % CSD_GT_total = zeros(1,size(EEG.data,2));
+    % Event_total = zeros(1,size(EEG.data,2));
+    % CSD_Labels_total = [];
+    % Event_Labels_total = [];
+    % for i=1:size(EEG.event,2)
+    %     if(contains(EEG.event(i).type,'CSD') || contains(EEG.event(i).type,'CSD/ISD') ||...
+    %             contains(EEG.event(i).type,'ISD') || contains(EEG.event(i).type,'scCSD'))
+    %         EEG.event(i).latency = EEG.event(i).latency;
+    %         CSD_Labels = cat(1,CSD_Labels,EEG.event(i));
+    %         CSD_GT_total(round(max(EEG.event(i).latency,1)))=1;
+    %         CSD_Labels_total = cat(1,CSD_Labels_total,{EEG.event(i).type});
+    %     else%if(~(strcmp(EEG.event(i).type,'boundary')))% || strcmp(EEG.event(i).type,'Data Quality Normal')))
+    %         EEG.event(i).latency = EEG.event(i).latency;
+    %         Other_Labels = cat(1,Other_Labels,EEG.event(i));
+    %         Event_total(round(max(EEG.event(i).latency,1)))=1;
+    %         Event_Labels_total = cat(1,Event_Labels_total,{EEG.event(i).type});
+    %     end
+    % end
     
     % sensor_locs = [EEG.chanlocs.X;EEG.chanlocs.Y;EEG.chanlocs.Z]';
     
