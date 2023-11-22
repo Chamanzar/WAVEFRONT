@@ -35,10 +35,14 @@ for ss = 1:Sessions_size
     % Load 'Visualization' file which contains Session-wide EEG & ECoG data
     EEG_vis = pop_loadset('filename',[Session_names(ss).name,'_Visualization_withDC_vII.set'],'filepath',current_path);
     
-    % Find any instances of 'nan' within the data
-    [ind_r,ind_c] = find(isnan(EEG_vis.data));
+    % Find any instances of 'Not a Number' [NaN] within the data
+    % [ind_r,ind_c] = find(isnan(EEG_vis.data));
     % Zero anywhere the data is 'NaN'
-    EEG_vis.data(ind_r,ind_c) = 0;
+    % EEG_vis.data(ind_r,ind_c) = 0;
+    
+    EEG_data = EEG_vis.data;
+    EEG_data(isnan(EEG_data)) = 0;
+    EEG_vis.data = EEG_data;
 
     % Filter EEG data to extract the delta frequency band 
     EEG_vis = pop_eegfiltnew(EEG_vis, 0.5,4,10000,0,[],1);
