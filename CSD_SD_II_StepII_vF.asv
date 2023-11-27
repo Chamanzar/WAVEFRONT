@@ -40,7 +40,7 @@ for ss = 1: Sessions_size
     % Y = [EEG_vis.chanlocs.Y];
     % Z = [EEG_vis.chanlocs.Z];
     
-    % EEG = EEG_vis;
+    EEG = EEG_vis;
     load([Session_names(ss).name,'_woGamma_preica_Imp.mat'])
     
     % Add the Impedance channels to EEG:
@@ -73,16 +73,16 @@ for ss = 1: Sessions_size
     % measurement_data_Imp_temp_copy = EEG.data(end-18:end,:);
     % EEG = pop_select( EEG,'nochannel',size(EEG.data,1)-18:size(EEG.data,1));
     
-    srate = EEG_vis.srate;
+    srate = EEG.srate;
     
-    % EEG_vis = EEG;
+    EEG_vis = EEG;
     
     %%
     
     WL = 10*60*srate;
     
     Block_size = 4*60*60*srate+1;
-    EEG = EEG_vis.data(1:19,:);
+    EEG = EEG.data(1:19,:);
     
     if(size(EEG,2)<Block_size)
         Block_size = size(EEG,2);
