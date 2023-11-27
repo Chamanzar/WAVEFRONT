@@ -36,22 +36,20 @@ for ss = 1: Sessions_size
     EEG_vis = pop_loadset('filename',[Session_names(ss).name,'_Visualization_Delta_ECoGcleaned_vII.set'],'filepath',current_path);
     EEG_vis = pop_select( EEG_vis,'nochannel',{'Depth1' 'Depth2' 'Depth3' 'Depth4' 'Depth5' 'Depth6'});
     
+    load([Session_names(ss).name,'_woGamma_preica_Imp.mat'])
+    
+    % Collection of commented out code blocks
     % X = [EEG_vis.chanlocs.X];
     % Y = [EEG_vis.chanlocs.Y];
     % Z = [EEG_vis.chanlocs.Z];
-    
     % EEG = EEG_vis;
-    load([Session_names(ss).name,'_woGamma_preica_Imp.mat'])
-    
     % Add the Impedance channels to EEG:
     % for Imp_ind=1:19
         % EEG.data(end+1,:) = measurement_data_Imp_temp_copy(Imp_ind,:);
         % EEG.chanlocs(end+1).labels = sprintf('Imp_%d',Imp_ind);
     % end
-    % EEG.nbchan = size(EEG.data,1);
-    
-    %% Remove poor data equality events:
-    
+    % EEG.nbchan = size(EEG.data,1);    
+    % Remove poor data equality events:
     % Remove_ind = find(strcmp({EEG.event(:).type},'Electrode Impedance High'));
     % Norm_ind = find(strcmp({EEG.event(:).type},'Data Quality Normal'));
     % 
@@ -69,27 +67,29 @@ for ss = 1: Sessions_size
     %         end
     %     end
     % end
-    
     % measurement_data_Imp_temp_copy = EEG.data(end-18:end,:);
-    % EEG = pop_select( EEG,'nochannel',size(EEG.data,1)-18:size(EEG.data,1));
+    % EEG = pop_select( EEG,'nochannel',size(EEG.data,1)-18:size(EEG.data,1));    
+    % EEG_vis = EEG;
+    %
+    % WL = 10*60*srate; 
     
     srate = EEG_vis.srate;
     
-    % EEG_vis = EEG;
-    
-    %%
-    
-    WL = 10*60*srate;
-    
+    %% Begin 'Part' processing
+
+    % Set Part size of 4 hours
     Block_size = 4*60*60*srate+1;
+
+    % Create an array of the EEG data from EEG vis data field 
     EEG = EEG_vis.data(1:19,:);
     
+    % Check for edge cases of full data less than 4 hours (or Part length)
     if(size(EEG,2)<Block_size)
         Block_size = size(EEG,2);
     end
     
-    M_global_tot = zeros(19,1);
-    M_global_Count = zeros(19,1);
+    % M_global_tot = zeros(19,1);
+    % M_global_Count = zeros(19,1);
     for CSD_ind=1:3.5*60*60*srate:size(EEG,2)-Block_size+1
         
         T_start = CSD_ind;
