@@ -44,34 +44,34 @@ for ss = 1: Sessions_size
     load([Session_names(ss).name,'_woGamma_preica_Imp.mat'])
     
     % Add the ECoG channels to EEG:
-    for Imp_ind=1:19
-        EEG.data(end+1,:) = measurement_data_Imp_temp_copy(Imp_ind,:);
-        EEG.chanlocs(end+1).labels = sprintf('Imp_%d',Imp_ind);
-    end
-    EEG.nbchan = size(EEG.data,1);
+    % for Imp_ind=1:19
+        % EEG.data(end+1,:) = measurement_data_Imp_temp_copy(Imp_ind,:);
+        % EEG.chanlocs(end+1).labels = sprintf('Imp_%d',Imp_ind);
+    % end
+    % EEG.nbchan = size(EEG.data,1);
     
     %% Remove poor data equality events:
     
-    Remove_ind = find(strcmp({EEG.event(:).type},'Electrode Impedance High'));
-    Norm_ind = find(strcmp({EEG.event(:).type},'Data Quality Normal'));
+    % Remove_ind = find(strcmp({EEG.event(:).type},'Electrode Impedance High'));
+    % Norm_ind = find(strcmp({EEG.event(:).type},'Data Quality Normal'));
+    % 
+    % Remoxve_latency = [EEG.event(Remove_ind).latency];
+    % Norm_latency= [EEG.event(Norm_ind).latency];
+    % 
+    % eerej_vec = [-1,-1];%dummy value
+    % for ee=1:size(Remove_latency,2)
+    %     if(Remove_latency(ee)>eerej_vec(end,2))
+    %         ind_temp = find(Norm_latency>Remove_latency(ee));
+    %         if(~isempty(ind_temp))
+    %             eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),Norm_latency(ind_temp(1))]);
+    %         else
+    %             eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),EEG.pnts]);
+    %         end
+    %     end
+    % end
     
-    Remove_latency = [EEG.event(Remove_ind).latency];
-    Norm_latency= [EEG.event(Norm_ind).latency];
-    
-    eerej_vec = [-1,-1];%dummy value
-    for ee=1:size(Remove_latency,2)
-        if(Remove_latency(ee)>eerej_vec(end,2))
-            ind_temp = find(Norm_latency>Remove_latency(ee));
-            if(~isempty(ind_temp))
-                eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),Norm_latency(ind_temp(1))]);
-            else
-                eerej_vec = cat(1,eerej_vec,[Remove_latency(ee),EEG.pnts]);
-            end
-        end
-    end
-    
-    measurement_data_Imp_temp_copy = EEG.data(end-18:end,:);
-    EEG = pop_select( EEG,'nochannel',size(EEG.data,1)-18:size(EEG.data,1));
+    % measurement_data_Imp_temp_copy = EEG.data(end-18:end,:);
+    % EEG = pop_select( EEG,'nochannel',size(EEG.data,1)-18:size(EEG.data,1));
     
     srate = EEG.srate;
     
