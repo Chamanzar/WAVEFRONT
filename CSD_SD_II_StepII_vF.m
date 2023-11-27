@@ -19,25 +19,26 @@ current_path = pwd;
 cd(eegpath)
 eeglab
 cd(current_path)
+% Similar to previous steps, ensure eeglab is running and initialize path
 
+% Find all Sessions of chosen Patient ID
 Session_names = dir('Patient*');
 Sessions_size = size(Session_names,1);
 
-
+% Loop through all sessions of Patient ID
 for ss = 1: Sessions_size
+  
+    % Enter Session-specific directory 
     cd(Session_names(ss).name)
     current_path = pwd;
-    
-    
+
+    % Load 'Visualization' file which contains Session-wide EEG & ECoG data
     EEG_vis = pop_loadset('filename',[Session_names(ss).name,'_Visualization_Delta_ECoGcleaned_vII.set'],'filepath',current_path);
     EEG_vis = pop_select( EEG_vis,'nochannel',{'Depth1' 'Depth2' 'Depth3' 'Depth4' 'Depth5' 'Depth6'});
     
-       
-    
-    X = [EEG_vis.chanlocs.X];
-    Y = [EEG_vis.chanlocs.Y];
-    Z = [EEG_vis.chanlocs.Z];
-    
+    % X = [EEG_vis.chanlocs.X];
+    % Y = [EEG_vis.chanlocs.Y];
+    % Z = [EEG_vis.chanlocs.Z];
     
     EEG = EEG_vis;
     load([Session_names(ss).name,'_woGamma_preica_Imp.mat'])
@@ -52,8 +53,6 @@ for ss = 1: Sessions_size
     %% Remove poor data equality events:
     
     Remove_ind = find(strcmp({EEG.event(:).type},'Electrode Impedance High'));
-    
-    
     Norm_ind = find(strcmp({EEG.event(:).type},'Data Quality Normal'));
     
     Remove_latency = [EEG.event(Remove_ind).latency];
@@ -71,7 +70,6 @@ for ss = 1: Sessions_size
         end
     end
     
-
     measurement_data_Imp_temp_copy = EEG.data(end-18:end,:);
     EEG = pop_select( EEG,'nochannel',size(EEG.data,1)-18:size(EEG.data,1));
     
