@@ -144,29 +144,43 @@ for ss = 1: Sessions_size
             Delete_ind_tot(j).Delete = unique(Delete_ind);
         end
         
+        % Set window length of 1 sec (in samps) for outlier removal padding
         w_length = 1*64;
-        for j=1:19
-            for i=-w_length:w_length
+        for j=1:19 % Loop through each channel 
+             % Remove window length before and after each outlier index
+            for i=-w_length:w_length 
                 Delete_ind_delayed = Delete_ind_tot(j).Delete+i;
+                % Ensure no delayed indices are negative or above upper lim
                 Delete_ind_delayed(Delete_ind_delayed<=0) = [];
                 Delete_ind_delayed(Delete_ind_delayed>size(EEG_data,2)) = [];
+                % Remove outlier delayed indices from data & mask
                 EEG_data(j,Delete_ind_delayed) = 0;
                 EEG_mask(j,Delete_ind_delayed) = 0;
             end
         end
         
+        % Set EEG sub as newly cleaned data
         EEG_sub = EEG_data;
-        for j=1:19
+       
+        for j=1:19 % For each of the 19 channels
+            % Extract data portions which are not equal to zero
             EEG_temp = EEG_data(j,EEG_mask(j,:)>0);
+            % If temp is not zero, normalize channel by channel's std
             if(~isempty(EEG_temp))
                 EEG_sub(j,:) = EEG_sub(j,:)./std(EEG_temp,0,2);
             end
         end
+        
+        % Ensure no data points are NaN
         EEG_sub(isnan(EEG_sub)) = 0;
+        % Final masking of EEG data 
         EEG_sub(EEG_mask==0) = 0;
         
-        
+        % 'save' normalized and cleaned EEG data back to EEG_vis struct for
+        % appropriate time region [T_start:T_end] 
         EEG_vis.data(1:19,T_start:T_end) = EEG_sub;
+        
+        % Save EEG mask as Impedance variable for proper time region
         measurement_data_Imp_temp_copy(1:19,T_start:T_end) = EEG_mask;
         
         clear CSD_type Events_type

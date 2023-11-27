@@ -77,10 +77,10 @@ for ss = 1:Sessions_size
     % Set window length for outlier removal padding  
     w_length = 100;
     for j=1:6 % Loop through each channel 
-        % Removal window lengths before and after each outlier index
+        % Remove window lengths before and after each outlier index
         for i=-w_length:w_length
             Delete_ind_delayed = Delete_ind_tot(j).Delete+i;
-            % Ensure no delayed index's are negative or above upper limit
+            % Ensure no delayed indices are negative or above upper limit
             Delete_ind_delayed(Delete_ind_delayed<=0) = [];
             Delete_ind_delayed(Delete_ind_delayed>size(EEG_data,2)) = [];
             % Remove outlier delayed indices

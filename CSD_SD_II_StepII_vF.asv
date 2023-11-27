@@ -124,40 +124,53 @@ for ss = 1: Sessions_size
 
         % Loop through all 19 EEG channels
         parfor j=1:19 % This part can either be run in parallel or series
-            j; % Simple call for watching loop progress
+            j;
             % Create data array of all non-zero data points at channel j  
             temp = EEG_sub(j,EEG_mask(j,:)>0); 
             % Find indices of EEG sub which are not zero
             TF_temp = find(EEG_mask(j,:)>0);
-            std_max = (std(temp,[],2));
-            if(std_max<=0 || isempty(temp))
-                std_max=30;
-            end
+
+            % std_max = (std(temp,[],2));
+            % if(std_max<=0 || isempty(temp))
+                % std_max=30;
+            % end
+
+            % Find outliers which 3 IQRs above the upper quartile of data
             [~,TF] = rmoutliers(temp,'quartiles','ThresholdFactor',3);
             T_ind = TF_temp(TF);
             Delete_ind = [];
             Delete_ind = cat(2,Delete_ind,T_ind);
+            % Store channel specific 'bad' indices in Part wide struct
             Delete_ind_tot(j).Delete = unique(Delete_ind);
         end
         
+        % Set window length of 1 sec (in samps) for outlier removal padding
         w_length = 1*64;
-        for j=1:19
-            for i=-w_length:w_length
+        for j=1:19 % Loop through each channel 
+             % Remove window length before and after each outlier index
+            for i=-w_length:w_length 
                 Delete_ind_delayed = Delete_ind_tot(j).Delete+i;
+                % Ensure no delayed indices are negative or above upper lim
                 Delete_ind_delayed(Delete_ind_delayed<=0) = [];
                 Delete_ind_delayed(Delete_ind_delayed>size(EEG_data,2)) = [];
+                % Remove outlier delayed indices from data & mask
                 EEG_data(j,Delete_ind_delayed) = 0;
                 EEG_mask(j,Delete_ind_delayed) = 0;
             end
         end
         
+        % Set EEG sub as newly cleaned data
         EEG_sub = EEG_data;
-        for j=1:19
+       
+        for j=1:19 % For each of the 19 channels
+            % Extract data portions which are not equal to zero
             EEG_temp = EEG_data(j,EEG_mask(j,:)>0);
+            % If temp is not zero, normalize channel by channel's std
             if(~isempty(EEG_temp))
                 EEG_sub(j,:) = EEG_sub(j,:)./std(EEG_temp,0,2);
             end
         end
+        
         EEG_sub(isnan(EEG_sub)) = 0;
         EEG_sub(EEG_mask==0) = 0;
         
