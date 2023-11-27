@@ -90,28 +90,44 @@ for ss = 1: Sessions_size
     
     % M_global_tot = zeros(19,1);
     % M_global_Count = zeros(19,1);
+
+    % Create starting index array of 3.5 hr intervals
+    % This creates Parts of 4 hrs with 30 min overlap of adjacent Parts 
     for CSD_ind=1:3.5*60*60*srate:size(EEG,2)-Block_size+1
         
+        % Set Part start index as 'CSD_ind' from for loop
         T_start = CSD_ind;
+        % Set Part end as CSD + 4 hrs, or as end of data in edge-cases
         T_end = min(CSD_ind+Block_size-1,size(EEG,2));
         
+        % Check CSD_ind is less than 3.5 hrs away from end of data
+        % if small amount of data, extend 'final' Part beyond Part size
         if(abs(size(EEG,2)-Block_size+1-CSD_ind)<3.5*60*60*srate)
             T_end = size(EEG,2);
         end
         
+        %Create logic array for EEG mask
         EEG_mask = (measurement_data_Imp_temp_copy>0);
+
+        %Trim data & logic array from full Session to specific Part
         EEG_sub = EEG(:,T_start:T_end);
         EEG_mask = EEG_mask(:,T_start:T_end);
         
-        
+        % Anywhere EEG_mask is zero, mask from EEG data 
         EEG_sub(EEG_mask==0) = 0;
         
+        % Create copies of EEG data for subsequent processing 
         EEG_data = EEG_sub;
         EEG_temp = EEG_sub;
+        % Initialize a struct for bad indicies 
         Delete_ind_tot = struct;
-        parfor j=1:19
-            j
-            temp = EEG_sub(j,EEG_mask(j,:)>0);
+
+        % Loop through all 19 EEG channels
+        parfor j=1:19 % This part can either be run in parallel or series
+            j; % Simple call for watching loop progress
+            % Create data array of all non-zero data points at channel j  
+            temp = EEG_sub(j,EEG_mask(j,:)>0); 
+            % Find indices of EEG sub which are not zero
             TF_temp = find(EEG_mask(j,:)>0);
             std_max = (std(temp,[],2));
             if(std_max<=0 || isempty(temp))

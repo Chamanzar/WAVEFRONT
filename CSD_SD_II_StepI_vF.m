@@ -55,7 +55,7 @@ for ss = 1:Sessions_size
     % Save copies of ECoG data
     EEG_data = EEG_sub; % Copy for masking 
     EEG_temp = EEG_sub; % Copy for plotting pre outlier removed data
-    Delete_ind_tot = struct; % Initialize a strct for bad indicies
+    Delete_ind_tot = struct; % Initialize a struct for bad indicies
 
     % Loop through each of the 6 ECoG channels
     for j=1:6
