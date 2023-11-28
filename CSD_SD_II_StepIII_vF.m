@@ -86,21 +86,27 @@ for ss = 1:Sessions_size
     load([Session_names(ss).name,'_woGamma_preica_Imp_Delta.mat'])
    
     srate = EEG.srate; % Set srate as defined from EEG (from EEG_vis)
+    WL = 5*60*srate; % Set window length of 5 minutes 
     
     %%
-    WL = 5*60*srate; % Set window length of 5 minutes 
+    % This code seperates CSD events from other non-removed events  
+
+    % Initalize vectors for storing event times
     CSD_GT_total = zeros(1,size(EEG.data,2)); 
     Event_total = zeros(1,size(EEG.data,2));
+    % Initalize vectors for storing event strings 
     CSD_Labels_total = [];
     Event_Labels_total = [];
+    % Loop through all events which were not filtered out in previous step
     for i=1:size(EEG.event,2)
+        % If event contains any of keywords, store info to CSD variables
         if(contains(EEG.event(i).type,'CSD') || contains(EEG.event(i).type,'CSD/ISD') ||...
                 contains(EEG.event(i).type,'ISD') || contains(EEG.event(i).type,'scCSD'))
-            EEG.event(i).latency = EEG.event(i).latency;% + WL-1;
+            % EEG.event(i).latency = EEG.event(i).latency;% + WL-1;
             CSD_GT_total(round(max(EEG.event(i).latency,1)))=1;
             CSD_Labels_total = cat(1,CSD_Labels_total,{EEG.event(i).type});
         else
-            EEG.event(i).latency = EEG.event(i).latency;% + WL-1;
+            % EEG.event(i).latency = EEG.event(i).latency;% + WL-1;
             Event_total(round(max(EEG.event(i).latency,1)))=1;
             Event_Labels_total = cat(1,Event_Labels_total,{EEG.event(i).type});
         end
