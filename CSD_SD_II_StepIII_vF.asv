@@ -78,18 +78,18 @@ for ss = 1:Sessions_size
     % Y = [EEG_vis.chanlocs.Y];
     % Z = [EEG_vis.chanlocs.Z];
     
-    % Create copies of EEG_vis 
+    % Create copies of EEG_Vis 
     EEG = EEG_vis;
     EEG_vis_PW = EEG_vis;
 
     % Loading the corresponding impedance data
     load([Session_names(ss).name,'_woGamma_preica_Imp_Delta.mat'])
    
-    srate = EEG.srate; % Set srate as defined from EEG (from EEG_vis)
+    srate = EEG.srate; % Set srate as defined from EEG_vis
     
     %%
-    WL = 5*60*srate; % Set window length of 5 minutes 
-    CSD_GT_total = zeros(1,size(EEG.data,2)); 
+    WL = 5*60*srate;
+    CSD_GT_total = zeros(1,size(EEG.data,2));
     Event_total = zeros(1,size(EEG.data,2));
     CSD_Labels_total = [];
     Event_Labels_total = [];
