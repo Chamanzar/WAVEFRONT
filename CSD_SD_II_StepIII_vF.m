@@ -94,9 +94,11 @@ for ss = 1:Sessions_size
     % Initalize vectors for storing event times
     CSD_GT_total = zeros(1,size(EEG.data,2)); 
     Event_total = zeros(1,size(EEG.data,2));
+
     % Initalize vectors for storing event strings 
     CSD_Labels_total = [];
     Event_Labels_total = [];
+
     % Loop through all events which were not filtered out in previous step
     for i=1:size(EEG.event,2)
         % If event contains any of keywords, store info to CSD variables
@@ -112,44 +114,61 @@ for ss = 1:Sessions_size
         end
     end
     
-    Block_size = 240*60*srate+1;
-    Step_size = 180*60*srate;
-    EEG = EEG.data(1:19,:);
+    % Beging 'Part-specific' data processing block (similar to StepII)
+
+    Block_size = 240*60*srate+1; % Set block length to 4 hours
+    Step_size = 180*60*srate; % Set step length to 3 hours
+    EEG = EEG.data(1:19,:); % Set EEG to data array of only EEG data
     
+    % Check for edge cases of full data less than 4 hours (or Block size)
     if(size(EEG,2)<Block_size)
         Block_size = size(EEG,2);
     end
     
+    % Initalize Session wide variables for channel dependent information
     M_global_tot = zeros(19,1);
     M_global_Count = zeros(19,1);
     valid_ind_Prev = zeros(19,1);
     EEG_PW_Prev = zeros(19,1);
+    
+    % Create starting indices of 3 hour intervals 
     for CSD_ind=1:Step_size:size(EEG,2)-Block_size+1
         
+        % Set Part Start as CSD_ind 
         T_start = CSD_ind;
+        % Set Part End as CSD + 4 hrs, or, as 'end of data' in edge-cases
         T_end = min(CSD_ind+Block_size-1,size(EEG,2));
         
+        % Check if CSD_ind is less than 3 hrs away from end of data
+        % if this is true, extend 'final' Part beyond "Part_size"
         if(abs(size(EEG,2)-Block_size+1-CSD_ind)<180*60*srate)
             T_end = size(EEG,2);
         end
         
+        % Set EEG mask as nonzero Imp data
         EEG_mask = (measurement_data_Imp_temp_copy>0);
+
+        % Copy 'total' event data to trim in next step
         CSD_GT = CSD_GT_total;
         Events = Event_total;
 
-        
+        % Trim data, mask, and events to 'Part' time interval
         EEG_sub = EEG(:,T_start:T_end);
         EEG_mask = EEG_mask(:,T_start:T_end);
         CSD_GT = CSD_GT(1,T_start:T_end);
         Events = Events(1,T_start:T_end);
         
-
+        % Mask data anywhere masking variable is equal to zero
         EEG_sub(EEG_mask==0) = 0;
         
-        
+        % Find the time indices of the CSD events
         CSD_type_counter = find(CSD_GT_total);
+
+        % Determine if any of the CSD events are within the Part range
         CSD_type_ind_strt = min(find(CSD_type_counter>=T_start));
         CSD_type_ind_Endd = max(find(CSD_type_counter<=T_end));
+        
+        % If the CSD Event is in range, set CSD_type from CSD_Labels_tot
         CSD_type = [];
         if(~isempty(CSD_type_ind_strt) && ~isempty(CSD_type_ind_Endd))
             if(CSD_type_ind_strt<=CSD_type_ind_Endd)
@@ -157,7 +176,7 @@ for ss = 1:Sessions_size
             end
         end
         
-        
+        % Analogous to above CSD event block, find non-CSD events in range
         Event_type_counter = find(Event_total);
         Event_type_ind_strt = min(find(Event_type_counter>=T_start));
         Event_type_ind_Endd = max(find(Event_type_counter<=T_end));
@@ -168,12 +187,15 @@ for ss = 1:Sessions_size
             end
         end
         
+        % Redeclare copies of EEG data 
         EEG_data = EEG_sub;
         EEG_temp = EEG_sub;
         EEG_sub = EEG_data(1:19,:);
         
+        % Begining of channel dependent Connected Component Processing
+        % The folowing steps are similar but each perform unique task
         
-        %Extract large connected zero intervals in the data with normal
+        %Extract large connected 'zero-intervals' in the data with normal
         %impedance:
         
         CC_WL = 10*srate;

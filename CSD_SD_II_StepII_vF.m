@@ -97,11 +97,11 @@ for ss = 1: Sessions_size
         
         % Set Part start index as 'CSD_ind' from for loop
         T_start = CSD_ind;
-        % Set Part end as CSD + 4 hrs, or as end of data in edge-cases
+        % Set Part end as CSD + 4 hrs, or, as 'end of data' in edge-cases
         T_end = min(CSD_ind+Block_size-1,size(EEG,2));
         
-        % Check CSD_ind is less than 3.5 hrs away from end of data
-        % if small amount of data, extend 'final' Part beyond Part size
+        % Check if CSD_ind is less than 3.5 hrs away from end of data
+        % if this is true, extend 'final' Part beyond "Part_size"
         if(abs(size(EEG,2)-Block_size+1-CSD_ind)<3.5*60*60*srate)
             T_end = size(EEG,2);
         end
