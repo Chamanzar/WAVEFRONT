@@ -106,7 +106,7 @@ for ss = 1:Sessions_size
     EEG_sub(isnan(EEG_sub)) = 0;
     % Add ECoG channels back to EEG_vis variable 
     EEG_vis.data(20:25,:) = EEG_sub;
-    % Save EEG_Vis with cleaned and normalized ECoG channels 
+    % Save EEG_Vis with cleaned and normalized ECoG channels as .set file
     EEG_vis = pop_saveset(EEG_vis, 'filename',[Session_names(ss).name,'_Visualization_Delta_ECoGcleaned_vII.set'],'filepath',current_path);
     
     % For visualization purposes only, zero EEG chans and plot only ECoG

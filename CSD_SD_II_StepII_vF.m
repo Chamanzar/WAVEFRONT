@@ -179,16 +179,20 @@ for ss = 1: Sessions_size
         % 'save' normalized and cleaned EEG data back to EEG_vis struct for
         % appropriate time region [T_start:T_end] 
         EEG_vis.data(1:19,T_start:T_end) = EEG_sub;
-        
+
         % Save EEG mask as Impedance variable for proper time region
         measurement_data_Imp_temp_copy(1:19,T_start:T_end) = EEG_mask;
         
-        clear CSD_type Events_type
+        % clear CSD_type Events_type
+        % End of Part Specific Loop
     end
     
+    % Save session wide EEG_vis with 'cleaned' EEG data as a .set file 
     EEG_vis = pop_saveset(EEG_vis, 'filename',[Session_names(ss).name,'_Visualization_Delta.set'],'filepath',current_path);
+    % Save impdenance data as a .mat file 
     save([Session_names(ss).name,'_woGamma_preica_Imp_Delta.mat'],'measurement_data_Imp_temp_copy','-v7.3')
     
+    % Exit Session specific directory 
     cd ..
 end
 
