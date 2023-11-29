@@ -198,12 +198,15 @@ for ss = 1:Sessions_size
         %Extract large connected 'zero-intervals' in the data with normal
         %impedance:
         
+        % Set 'Connect Component Window Length' as 10 seconds
         CC_WL = 10*srate;
-        for Ch = 1:19
+        for Ch = 1:19 
+            % At each channel, find intervals of comtinuous zeros
             EEG_data_ConComp = bwconncomp(EEG_sub(Ch,:)==0);
             Strt = [];
             Endd = [];
-            
+            % Loop through all regions and if region is longer than CC_WL
+            % add indices to EEG_mask for eventual filtering 
             for i=1:size(EEG_data_ConComp.PixelIdxList,2)
                 if(size(EEG_data_ConComp.PixelIdxList{1,i},1)>CC_WL)
                      EEG_mask(Ch,EEG_data_ConComp.PixelIdxList{1,i}) = 0;
@@ -211,16 +214,22 @@ for ss = 1:Sessions_size
             end
         end
         
-        %Remove small and isolated connected valid portions:
+        %Remove small and isolated valid portions:
+        % Save a copy of EEG_mask
         EEG_mask_gaps = EEG_mask; 
+        % Reset CC_WL as 20 minutes for 'small valid portion' removal 
         CC_WL = 20*60*srate;
         for Ch = 1:19
+            % Find regions of 'connectivity' in EEG_mask
             EEG_mask_ConComp = bwconncomp(EEG_mask(Ch,:));
             Strt = [];
             Endd = [];
-            
+
+            % Check if connected components regions are atleast 20 mins 
             for i=2:size(EEG_mask_ConComp.PixelIdxList,2)-1
                 if(size(EEG_mask_ConComp.PixelIdxList{1,i},1)<CC_WL)
+                    % If interval is less than 20 mins & not w/n a 1 min
+                    % interval from neighboring regions, add region to mask
                     if(EEG_mask_ConComp.PixelIdxList{1,i+1}(1)-EEG_mask_ConComp.PixelIdxList{1,i}(end)<0.05*CC_WL)
                         EEG_mask_gaps(Ch,EEG_mask_ConComp.PixelIdxList{1,i}(end):EEG_mask_ConComp.PixelIdxList{1,i+1}(1)) = 1;
                     end
@@ -230,10 +239,12 @@ for ss = 1:Sessions_size
                 end
             end
             
+            % Check if more than 2 ROIs are found for Channel Ch 
             if(size(EEG_mask_ConComp.PixelIdxList,2)<2)
                 continue;
             end
             
+            % If >2 ROIs, perform edge case processing as above  
             if(size(EEG_mask_ConComp.PixelIdxList{1,1},1)<CC_WL)
                 if(EEG_mask_ConComp.PixelIdxList{1,2}(1)-EEG_mask_ConComp.PixelIdxList{1,1}(end)<0.05*CC_WL)
                     EEG_mask_gaps(Ch,EEG_mask_ConComp.PixelIdxList{1,1}(end):EEG_mask_ConComp.PixelIdxList{1,2}(1)) = 1;
@@ -246,14 +257,14 @@ for ss = 1:Sessions_size
             end
         end
         
-        
-        %Remove small and isolated connected valid portions:
         CC_WL = 20*60*srate;
         for Ch = 1:19
+            % Find connected regions of new mask from above
             EEG_mask_ConComp = bwconncomp(EEG_mask_gaps(Ch,:));
             Strt = [];
             Endd = [];
             
+            % If ROI is less than 20 mins in length set region to be masked
             for i=1:size(EEG_mask_ConComp.PixelIdxList,2)
                 if(size(EEG_mask_ConComp.PixelIdxList{1,i},1)<CC_WL)
                         EEG_mask(Ch,EEG_mask_ConComp.PixelIdxList{1,i}) = 0;
@@ -262,17 +273,19 @@ for ss = 1:Sessions_size
             end
         end
         
-        
+        % Perform masking using mask generated above
         EEG_sub(EEG_mask==0) = 0;
         
         %figure;stackedplot(1:size(EEG_sub,2),EEG_sub')
         
-        
+        % Initalize matrix for creating Power Enveloped data
         EEG_PW_tot = zeros(size(EEG_sub));
         for Ch=1:19
             
+            % Find valid portions of data
             EEG_mask_ConComp = bwconncomp(EEG_mask_gaps(Ch,:));
             
+            % Find the power of the signal at each valid region
             for i=1:size(EEG_mask_ConComp.PixelIdxList,2)
                 
                 EEG_sub_sub = EEG_sub(Ch,EEG_mask_ConComp.PixelIdxList{1,i});
@@ -282,24 +295,31 @@ for ss = 1:Sessions_size
                 
                 EEG_PW = EEG_sub_sub(EEG_mask_sub_sub==1).^2;
                 EEG_mask_sub = EEG_mask_sub_sub(EEG_mask_sub_sub==1);
+
+                % If region is less than 15 mins, mask region
                 if(size(EEG_PW,2)<3*WL)
                     EEG_PW_tot(Ch,EEG_mask_ConComp.PixelIdxList{1,i}) = 0;
                     EEG_mask(Ch,EEG_mask_ConComp.PixelIdxList{1,i}) = 0;
                     continue;
                 end
                 
+                % Calculate the envelope from power of singal 
                 EEG_PW_temp = EEG_PW;
                 [u,l] = envelope(EEG_PW_temp',WL,'rms');
                 EEG_PW = u';
+
+                % Trim edges of Power Envelope
                 EEG_PW(:,size(EEG_PW,2)-WL+1:end) = 0;
                 EEG_PW(:,1:WL-1) = 0;
                 EEG_mask_sub(:,size(EEG_mask_sub,2)-WL+1:end) = 0;
                 EEG_mask_sub(:,1:WL-1) = 0;
                 EEG_PW_temp = EEG_PW(:,WL:size(EEG_PW,2)-WL);
                 
+                % Assign mask and pwr env back into full Part array
                 EEG_PW_tot_temp(EEG_mask_sub_sub==1) = EEG_PW;
                 EEG_mask_sub_sub(EEG_mask_sub_sub==1) = EEG_mask_sub;
                 
+                % Set ch specific info back to Part specific data
                 EEG_PW_tot(Ch,EEG_mask_ConComp.PixelIdxList{1,i}) = EEG_PW_tot_temp;
                 EEG_mask(Ch,EEG_mask_ConComp.PixelIdxList{1,i}) = EEG_mask_sub_sub;
             end
