@@ -201,7 +201,7 @@ for ss = 1:Sessions_size
         % Set 'Connect Component Window Length' as 10 seconds
         CC_WL = 10*srate;
         for Ch = 1:19 
-            % At each channel, find intervals of cotinuous zeros
+            % At each channel, find intervals of comtinuous zeros
             EEG_data_ConComp = bwconncomp(EEG_sub(Ch,:)==0);
             Strt = [];
             Endd = [];
@@ -319,7 +319,7 @@ for ss = 1:Sessions_size
                 EEG_PW_tot_temp(EEG_mask_sub_sub==1) = EEG_PW;
                 EEG_mask_sub_sub(EEG_mask_sub_sub==1) = EEG_mask_sub;
                 
-                %
+                % Set ch specific info back to Part specific data
                 EEG_PW_tot(Ch,EEG_mask_ConComp.PixelIdxList{1,i}) = EEG_PW_tot_temp;
                 EEG_mask(Ch,EEG_mask_ConComp.PixelIdxList{1,i}) = EEG_mask_sub_sub;
             end
@@ -328,7 +328,7 @@ for ss = 1:Sessions_size
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_sub')
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_PW_tot')
 
-        
+        % Set param long invalid window length as 1 min
         long_invalid_WL = 1*60*srate;
    
         EEG_mask_long_invalid = double(EEG_mask);
@@ -375,7 +375,8 @@ for ss = 1:Sessions_size
         %figure;stackedplot(1:size(EEG_sub,2),EEG_PW_tot')
 
 
-%       Cross Correlation:
+%%      Cross Correlation:
+        % Cross correlate the Power Envs w first-derivative kernal 'Ptrn'
         WL_xcrr = 5*60*srate;
         Ptrn = [(1/WL_xcrr)*ones(1,WL_xcrr),zeros(1,WL),-(1/WL_xcrr)*ones(1,WL_xcrr)];%*ones(1,WL_xcrr)];
         for i=1:size(EEG_PW_tot,1)

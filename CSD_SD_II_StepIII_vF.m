@@ -328,7 +328,7 @@ for ss = 1:Sessions_size
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_sub')
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_PW_tot')
 
-        
+        % Set param long invalid window length as 1 min
         long_invalid_WL = 1*60*srate;
    
         EEG_mask_long_invalid = double(EEG_mask);
@@ -375,7 +375,8 @@ for ss = 1:Sessions_size
         %figure;stackedplot(1:size(EEG_sub,2),EEG_PW_tot')
 
 
-%       Cross Correlation:
+%%      Cross Correlation:
+        % Cross correlate the Power Envs w first-derivative kernal 'Ptrn'
         WL_xcrr = 5*60*srate;
         Ptrn = [(1/WL_xcrr)*ones(1,WL_xcrr),zeros(1,WL),-(1/WL_xcrr)*ones(1,WL_xcrr)];%*ones(1,WL_xcrr)];
         for i=1:size(EEG_PW_tot,1)
@@ -383,17 +384,21 @@ for ss = 1:Sessions_size
             EEG_PW_tot_ConComp = bwconncomp(EEG_mask(i,:)==0);
             Strt = [];
             Endd = [];
+
+            % If mask is greater than 0.5 mins save as region to mask
             for j=1:size(EEG_PW_tot_ConComp.PixelIdxList,2)
                 if(size(EEG_PW_tot_ConComp.PixelIdxList{1,j},1)>0.1*WL_xcrr)
                     Strt = cat(1,Strt,EEG_PW_tot_ConComp.PixelIdxList{1,j}(1,1));
                     Endd = cat(1,Endd,EEG_PW_tot_ConComp.PixelIdxList{1,j}(end,1));
                 end
             end
-
+            
+            % Perform cross-correlation
             [c,lags] = xcorr(EEG_PW_tot(i,:),Ptrn);
             EEG_PW_tot(i,:) = c(find(lags==0):end);
             EEG_PW_tot(i,:) = [zeros(1,2*WL_xcrr+WL),EEG_PW_tot(i,1:size(EEG_PW_tot,2)-(2*WL_xcrr+WL))];
             
+            % Mask regions found from previous masking loop from PW Env
             for j=1:size(Strt,1)
 %                 EEG_PW_tot(i,max(Strt(j)-0.5*size(Ptrn,2),1):min(Strt(j)+0.5*size(Ptrn,2)-1,size(EEG_PW_tot,2))) = 0;
                 EEG_PW_tot(i,max(Strt(j)-(2*WL_xcrr+WL),1):min(Endd(j)+(2*WL_xcrr+WL),size(EEG_PW_tot,2))) = 0;
