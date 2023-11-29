@@ -407,7 +407,7 @@ for ss = 1:Sessions_size
         end
         
         
-        %Remove small and isolated connected valid portions:
+        % Analgous to prev code block remove isolated portions from EEG PW  
         for Ch = 1:19
             EEG_mask_ConComp = bwconncomp(EEG_mask(Ch,:));
             Strt = [];
@@ -438,42 +438,48 @@ for ss = 1:Sessions_size
             end
         end
         
+        % Perform masking on mask calculated above
         EEG_PW_tot(EEG_mask==0) = 0;
         
-%         figure;stackedplot(1:size(EEG_sub,2),EEG_PW_tot')
+        %figure;stackedplot(1:size(EEG_sub,2),EEG_PW_tot')
+        % EEG_vis_temp = EEG_PW_tot;
 
-
-        EEG_vis_temp = EEG_PW_tot;
+        % Find channel specific Session-wide mean of power envelope
         for i=1:19
-            Ch_inter_dist = (X(i)-X).^2+(Y(i)-Y).^2+(Z(i)-Z).^2;
-            [~,dist_ind] = sort(Ch_inter_dist);
+            % Ch_inter_dist = (X(i)-X).^2+(Y(i)-Y).^2+(Z(i)-Z).^2;
+            % [~,dist_ind] = sort(Ch_inter_dist);
             EEG_PW_temp =  EEG_PW_tot(i,EEG_mask(i,:)==1);
             M_global_tot(i) = M_global_tot(i) + sum(EEG_PW_temp,2);
             M_global_Count(i) = M_global_Count(i) + size(EEG_PW_temp,2);
         end
         
-        
-        
+        % Final masking of data 
         EEG_PW_tot(EEG_mask==0) = 0;
-% %         
+
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_sub')
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_PW_tot') 
-
+        
         EEG_PW = EEG_PW_tot;
            
-        EEG_elec = 19;
-%         close all
-%         
+        % EEG_elec = 19;
+%         close all         
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_sub') 
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_PW')
         
+        % Save Part Specific information
         save([Session_names(ss).name ,'_',sprintf('CSD_ind_%d',CSD_ind), '_Delta_SDII_vConfusion_240minOv180min_CCWL20min_Xcrr_Pruned_vVII.mat'], 'EEG_PW', 'EEG_sub', 'EEG_mask', 'CSD_type', 'Events_type', 'Events', 'CSD_GT', 'srate', 'CSD_GT_total','CSD_Labels_total','T_start','T_end', '-v7.3');
         close all
         
+        % Clear CSD and Event type variables for next Part
         clear CSD_type Events_type
+        % End of 'Part'-specific loop
     end
+    
+    % Find the channel specific global mean across the Session and save
     Global_M = M_global_tot./M_global_Count;
     save([Session_names(ss).name ,'GlobalMean_Delta_SDII_vConfusion_240minOv180min_CCWL20min_Xcrr_Improved_Pruned_vVII.mat'],'Global_M')
+    
+    % Exit Session-specific loop
     cd ..
 end
 

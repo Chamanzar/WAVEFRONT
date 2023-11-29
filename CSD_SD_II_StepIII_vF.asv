@@ -384,17 +384,21 @@ for ss = 1:Sessions_size
             EEG_PW_tot_ConComp = bwconncomp(EEG_mask(i,:)==0);
             Strt = [];
             Endd = [];
+
+            % If mask is greater than 0.5 mins save as region to mask
             for j=1:size(EEG_PW_tot_ConComp.PixelIdxList,2)
                 if(size(EEG_PW_tot_ConComp.PixelIdxList{1,j},1)>0.1*WL_xcrr)
                     Strt = cat(1,Strt,EEG_PW_tot_ConComp.PixelIdxList{1,j}(1,1));
                     Endd = cat(1,Endd,EEG_PW_tot_ConComp.PixelIdxList{1,j}(end,1));
                 end
             end
-
+            
+            % Perform cross-correlation
             [c,lags] = xcorr(EEG_PW_tot(i,:),Ptrn);
             EEG_PW_tot(i,:) = c(find(lags==0):end);
             EEG_PW_tot(i,:) = [zeros(1,2*WL_xcrr+WL),EEG_PW_tot(i,1:size(EEG_PW_tot,2)-(2*WL_xcrr+WL))];
             
+            % Mask regions found from previous masking loop from PW Env
             for j=1:size(Strt,1)
 %                 EEG_PW_tot(i,max(Strt(j)-0.5*size(Ptrn,2),1):min(Strt(j)+0.5*size(Ptrn,2)-1,size(EEG_PW_tot,2))) = 0;
                 EEG_PW_tot(i,max(Strt(j)-(2*WL_xcrr+WL),1):min(Endd(j)+(2*WL_xcrr+WL),size(EEG_PW_tot,2))) = 0;
@@ -403,7 +407,7 @@ for ss = 1:Sessions_size
         end
         
         
-        %Remove small and isolated connected valid portions:
+        % Analgous to prev code block remove isolated portions from EEG PW  
         for Ch = 1:19
             EEG_mask_ConComp = bwconncomp(EEG_mask(Ch,:));
             Strt = [];
@@ -434,12 +438,14 @@ for ss = 1:Sessions_size
             end
         end
         
+        % Perform masking on mask calculated above
         EEG_PW_tot(EEG_mask==0) = 0;
         
 %         figure;stackedplot(1:size(EEG_sub,2),EEG_PW_tot')
 
-
+        % Save a copy of the correlated-power envelope signal 
         EEG_vis_temp = EEG_PW_tot;
+        
         for i=1:19
             Ch_inter_dist = (X(i)-X).^2+(Y(i)-Y).^2+(Z(i)-Z).^2;
             [~,dist_ind] = sort(Ch_inter_dist);
