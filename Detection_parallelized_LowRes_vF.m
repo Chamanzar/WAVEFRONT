@@ -352,7 +352,7 @@ for ss = ss_start:ss_End
             value = II;
             activity = (II(end:-1:1,:,:));
 
-            %% Calculating Optical flow:
+            %% Calculating Optical flows:
             
             Ttotal = size(activity,3);
             %Orange color
@@ -389,9 +389,7 @@ for ss = ss_start:ss_End
             
             
             
-            %Plot optical flows
-            
-            
+            % Old code for plotting optical flows
 %             Fr=[];
 %             
 %             for r=309
@@ -409,8 +407,7 @@ for ss = ss_start:ss_End
 %                 hold off
 %             end
             
-            
-            
+            % Calculate magnitude and orientation of optical flows 
             velocity = {};
             for t =1:size(vel_x,3)
                 if isempty(bb{t})
@@ -444,12 +441,13 @@ for ss = ss_start:ss_End
             
             
             %% Histogram @ 10min(86):
-%             %
+%             % Old code for plotting histogram of BBoxs
 %                         r=309;% hidtogram of BBox @ 10 min
 %                         figure;polarhistogram('BinEdges',(pi/180)*[linspace(0,360,9)-22.5,360+22.5],'BinCounts',velocity{r, 1}.hof)
 %             
             %% Quantization of orientations and creating OBBox:
             velocity_tot = velocity;
+            % Begin parameter 'Thr_1' specific-loop
             for Thr_1_ind = 1:size(THR_1,2)
                 
                 Thr_1 = THR_1(Thr_1_ind)
@@ -483,7 +481,8 @@ for ss = ss_start:ss_End
                         mag = velocity{t,i}.mag;
                         mag(mag==0) = [];
                         
-                        %Remove pop-ups/fades
+                        % Score BBox's based upon maag and orietnation 
+                        % compare to Thr_1 to remove pop-ups and fades 
                         scr = sqrt(mean(mean(mag.*cos(vel*pi/180))).^2 + mean(mean(mag.*sin(vel*pi/180))).^2);
                         
                         if(isempty(vel))
@@ -530,7 +529,7 @@ for ss = ss_start:ss_End
                     Vy = sum(Vy,3);
                     scr_tot = sum(scr_tot,3);
                     
-                    %Creating the OBBoxes:
+                    %Creating the OBBoxes (Oriented Bounding Boxes):
                     ANgle(:,:,t) = Angls;
                     VX(:,:,t) = Vx;
                     VY(:,:,t) = Vy;
@@ -570,14 +569,15 @@ for ss = ss_start:ss_End
                 
                 %% Scoring the OBBox based on consistency in orientation & speed:
                 
+                % Begin 'Thr_2' specific-loop
                 for Thr_2_ind = 1:size(THR_2,2)
-                    
+
+                    % Begin 'Thr_4' specific-loop           
                     for Thr_4_ind = 1:size(THR_4,2)
                         
                         Thr_2 = THR_2(Thr_2_ind)
                         
                         Thr_4 = THR_4(Thr_4_ind)
-                        
                         
                         Threshld_Frame=Thr_2;%0.1:0.2:0.9
                         SCR = BB;
@@ -608,12 +608,15 @@ for ss = ss_start:ss_End
                                         ii = i;
                                         if (isempty(BB{t+q,ii})==0)
                                             for w=1:size(BB{t+q,ii},1)
+                                                
                                                 %avg speed of OBBox:
                                                 VV = mean(mean(sqrt(VX(BB{t+q,ii}(w,2):BB{t+q,ii}(w,2)+BB{t+q,ii}(w,4)-1,BB{t+q,ii}(w,1):BB{t+q,ii}(w,1)+BB{t+q,ii}(w,3)-1,t)).^2+ ...
                                                     (VY(BB{t+q,ii}(w,2):BB{t+q,ii}(w,2)+BB{t+q,ii}(w,4)-1,BB{t+q,ii}(w,1):BB{t+q,ii}(w,1)+BB{t+q,ii}(w,3)-1,t)).^2));
                                                 SCR_BB = mean(mean(SCR_tot(BB{t+q,ii}(w,2):BB{t+q,ii}(w,2)+BB{t+q,ii}(w,4)-1,BB{t+q,ii}(w,1):BB{t+q,ii}(w,1)+BB{t+q,ii}(w,3)-1,t)));
+                                                
                                                 %Consistency check in speed and orientation:
                                                 Theta_degree = linspace(90,-10,size(II,1));
+                                                
                                                 if(abs(BB{t+q,ii}(w,6)-BB{t,i}(j,6))<2)
                                                     Delta_BB = (abs(BB{t+q,ii}(w,6)-BB{t,i}(j,6))*75*Phi_scale*(pi/180)*cos((pi/180)*Theta_degree(min(BB{t+q,ii}(w,7),BB{t,i}(j,7)))))^2+...
                                                     (75*Theta_scale*(pi/180)*abs(BB{t+q,ii}(w,7)-BB{t,i}(j,7)))^2;
@@ -621,10 +624,12 @@ for ss = ss_start:ss_End
                                                     Delta_BB = (75*Phi_scale*(pi/180)*sum(cos((pi/180)*Theta_degree(round(linspace(min(BB{t+q,ii}(w,7),BB{t,i}(j,7)),max(BB{t+q,ii}(w,7),BB{t,i}(j,7)),abs(BB{t+q,ii}(w,6)-BB{t,i}(j,6)))))),2))^2+...
                                                     (75*Theta_scale*(pi/180)*abs(BB{t+q,ii}(w,7)-BB{t,i}(j,7)))^2;
                                                 end
+                                                
                                                 if(BB{t+q,ii}(w,5)==BB{t,i}(j,5) && ...
                                                         (Delta_BB<(ceil(70*Sub_sampl/(srate*60))^2)) && ...
                                                         (Delta_BB>(ceil(0*Sub_sampl/(srate*60))^2)) && ...
                                                         ((60*srate/(Sub_sampl))*VV)<=8 && (((60*srate/(Sub_sampl))*VV)>=0.5))% && ((LR_sgn*BB{t+q,ii}(w,1))<(LR_sgn*181)))
+                                                    
                                                     %OBBox score:
                                                     SCR{t,i}(j)=SCR{t,i}(j)+1;%SCR_BB;%(BB{t+q,ii}(w,4)*BB{t+q,ii}(w,3));
                                                     Vel_SCR{t,i}(j) = Vel_SCR{t,i}(j) + ((60*srate/(Sub_sampl))*VV);
@@ -644,6 +649,7 @@ for ss = ss_start:ss_End
                                 end
                             end
                         end
+                        
                         %Some adjustment at boundaries:
                         for t=size(SCR,1)-L_wind+1:size(SCR,1)
                             for i=1:size(SCR,2)

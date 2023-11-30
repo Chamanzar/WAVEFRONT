@@ -352,7 +352,7 @@ for ss = ss_start:ss_End
             value = II;
             activity = (II(end:-1:1,:,:));
 
-            %% Calculating Optical flow:
+            %% Calculating Optical flows:
             
             Ttotal = size(activity,3);
             %Orange color
@@ -361,10 +361,11 @@ for ss = ss_start:ss_End
             Stp = 1;
             
             disp('Computing Optical Flow');
-            % Compute optical flow
+            % Compute optical flow 
             opticalFlow = opticalFlowHS;
             of = estimateFlow(opticalFlow, value(:,:,1));
-            % the variable of below stores optical flows at each x,y as real and imaginary values.
+            % the variable 'of' below stores optical flows at each 
+            % x,y as real and imaginary values.
             bb = {};
             cc = {};
             for t = 1:Ttotal-Stp
@@ -372,7 +373,7 @@ for ss = ss_start:ss_End
                 label = bwlabel(activity(:,:,t));
                 st = regionprops( label,'centroid', 'Area', 'BoundingBox' );
                 bb{t} = round(cat(1,st.BoundingBox)); % Bounding box for connected components
-                cc{t} = round(cat(1,st.Centroid)); % Bounding box for connected components
+                cc{t} = round(cat(1,st.Centroid)); % Centroid for connected components
             end
             
             
@@ -388,9 +389,7 @@ for ss = ss_start:ss_End
             
             
             
-            %Plot optical flows
-            
-            
+            % Old code for plotting optical flows
 %             Fr=[];
 %             
 %             for r=309
@@ -408,8 +407,7 @@ for ss = ss_start:ss_End
 %                 hold off
 %             end
             
-            
-            
+            % Calculate magnitude and orientation of optical flows 
             velocity = {};
             for t =1:size(vel_x,3)
                 if isempty(bb{t})
@@ -443,12 +441,13 @@ for ss = ss_start:ss_End
             
             
             %% Histogram @ 10min(86):
-%             %
+%             % Old code for plotting histogram of BBoxs
 %                         r=309;% hidtogram of BBox @ 10 min
 %                         figure;polarhistogram('BinEdges',(pi/180)*[linspace(0,360,9)-22.5,360+22.5],'BinCounts',velocity{r, 1}.hof)
 %             
             %% Quantization of orientations and creating OBBox:
             velocity_tot = velocity;
+            % Begin parameter 'Thr_1' specific-loop
             for Thr_1_ind = 1:size(THR_1,2)
                 
                 Thr_1 = THR_1(Thr_1_ind)
@@ -482,7 +481,8 @@ for ss = ss_start:ss_End
                         mag = velocity{t,i}.mag;
                         mag(mag==0) = [];
                         
-                        %Remove pop-ups/fades
+                        % Score BBox's based upon maag and orietnation 
+                        % compare to Thr_1 to remove pop-ups and fades 
                         scr = sqrt(mean(mean(mag.*cos(vel*pi/180))).^2 + mean(mean(mag.*sin(vel*pi/180))).^2);
                         
                         if(isempty(vel))
@@ -529,7 +529,7 @@ for ss = ss_start:ss_End
                     Vy = sum(Vy,3);
                     scr_tot = sum(scr_tot,3);
                     
-                    %Creating the OBBoxes:
+                    %Creating the OBBoxes (Oriented Bounding Boxes):
                     ANgle(:,:,t) = Angls;
                     VX(:,:,t) = Vx;
                     VY(:,:,t) = Vy;
@@ -569,8 +569,10 @@ for ss = ss_start:ss_End
                 
                 %% Scoring the OBBox based on consistency in orientation & speed:
                 
+                % Begin 'Thr_2' specific-loop
                 for Thr_2_ind = 1:size(THR_2,2)
                     
+                    % Begin 'Thr_4' specific-loop           
                     for Thr_4_ind = 1:size(THR_4,2)
                         
                         Thr_2 = THR_2(Thr_2_ind)
