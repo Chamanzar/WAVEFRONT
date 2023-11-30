@@ -702,7 +702,8 @@ for ss = ss_start:ss_End
                         CNT_Vel(CNT~=0) = CNT_Vel(CNT~=0)./CNT(CNT~=0);
                         
                         %% Temporal stitching:
-                        CNT(CNT<0.05*median(CNT)) = 0;% reject frames with very small total score
+                        % reject frames with very small total score
+                        CNT(CNT<0.05*median(CNT)) = 0;
                         CNT_Vel(CNT==0) = -1;
                         CNT_T = bwconncomp(CNT);
                         CNT_TT = [];
