@@ -110,7 +110,7 @@ for ss = ss_start:ss_End
     [ind_r,ind_c] = find(isnan(EEG_vis.data));
     EEG_vis.data(ind_r,ind_c) = 0;
     
-    % Load Global 
+    % Load Global Mean data (Session-wide average of EEG_PW)
     Global_M = load([Session_names(ss).name ,'GlobalMean_Delta_SDII_vConfusion_240minOv180min_CCWL20min_Xcrr_Improved_Pruned_vVII.mat']);
     Global_M = Global_M.Global_M;
     Part_names = dir([Session_names(ss).name,'_CSD_ind_*_Delta_SDII_vConfusion_240minOv180min_CCWL20min_Xcrr_Pruned_vVII.mat']);
@@ -128,6 +128,8 @@ for ss = ss_start:ss_End
         Part_num = str2double(Part_name_char{1}(part_ind+4:of_ind-2));
     end
     [~,Part_ind] = sort(Part_num);
+
+    % Load EEG Electrode Spatial Locations 
     UPMC_TBI_EEG_Loc = load('D:\SilenceMap-v1.0\Chamanzar-SilenceMap-668f8ab\EEG_prep\UPMC_TBI_EEG_Loc_SDII_ordered.mat');
     UPMC_TBI_EEG_Loc = UPMC_TBI_EEG_Loc.UPMC_TBI_EEG_Loc;
     
@@ -155,6 +157,7 @@ for ss = ss_start:ss_End
     Strt_tot_temp = {};
     Thr_counter_tot = {};
     
+    %% Beginning of Part-Specific Loop
     for CSD_ind_orig = 1:Part_size
         
         

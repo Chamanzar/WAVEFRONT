@@ -157,7 +157,7 @@ for ss = ss_start:ss_End
     Strt_tot_temp = {};
     Thr_counter_tot = {};
     
-    % Beginning of CSD Specific Loop
+    %% Beginning of Part-Specific Loop
     for CSD_ind_orig = 1:Part_size
         
         
@@ -198,6 +198,7 @@ for ss = ss_start:ss_End
         [~,sensor_ind] = sort(UPMC_TBI_EEG_Loc(1:size(UPMC_TBI_EEG_Loc,1)-1,4),'ascend');
         sensor_locs_n = sensor_locs_n(sensor_ind,:);
         
+        % Get Part specific event info including Event type and timestamp
         if(isempty(CSD_type))
             CSD_type = {'1_No CSD'};
             CSD_GT(1) = 1;
@@ -236,6 +237,8 @@ for ss = ss_start:ss_End
         end
         
         Events_temp = Events;
+        
+        % Calculate spatial loc of electrodes in cart. and spherical coords
         
         Alphax = 0;%*(rand(1)-0.5)+n*0;
         Alphay = 0;%80*(rand(1)-0.5)+n*0;
