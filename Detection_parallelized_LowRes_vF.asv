@@ -198,6 +198,7 @@ for ss = ss_start:ss_End
         [~,sensor_ind] = sort(UPMC_TBI_EEG_Loc(1:size(UPMC_TBI_EEG_Loc,1)-1,4),'ascend');
         sensor_locs_n = sensor_locs_n(sensor_ind,:);
         
+        % Get Part specific event info including Event type and timestamp
         if(isempty(CSD_type))
             CSD_type = {'1_No CSD'};
             CSD_GT(1) = 1;
@@ -237,6 +238,8 @@ for ss = ss_start:ss_End
         
         Events_temp = Events;
         
+        % Calculate spatial loc of electrodes in cart. and spherical coords
+
         Alphax = 0;%*(rand(1)-0.5)+n*0;
         Alphay = 0;%80*(rand(1)-0.5)+n*0;
         Alphaz = 90;
@@ -263,6 +266,7 @@ for ss = ss_start:ss_End
         phi((phi==360))= 1;
         theta((theta==0))= theta((theta==0))+1;
         
+        % Project Data into 2D space using above spatial conversions 
         EEG_median = (median(EEG_PW(crani_ind,:),1));
         I_EEG = ones(180,359,size(EEG_PW,2));
         I_mask = zeros(180,359,size(EEG_mask,2));
@@ -301,6 +305,7 @@ for ss = ss_start:ss_End
                 
         %% EEG spatial interpolation:
         
+        % Smooth 'Sparse' spatial projections, creating 'I_smoothed'
         %Gaussian:
         figure;mesh(I_EEG(:,:,309))
         h = ones(30);
@@ -316,6 +321,8 @@ for ss = ss_start:ss_End
         %% Temporal subsampling of frames II:
         Thr_counter = 0;
         Thr_ind = 0;
+
+        % Begin Parameter-specific loops, starting with Thr_3
         for Thr_3_ind = 1:size(THR_3,2)
             Thr_3 = THR_3(Thr_3_ind)
             
@@ -323,8 +330,7 @@ for ss = ss_start:ss_End
             num_good_elec = sum(EEG_mask(crani_ind,:),1);
             II_median = (median(reshape(II,[],1,size(II,3)),1));
             
-            
-            %Thresholding the frames to obtain binary images (I_BW):
+            % Thresholding the frames to obtain binary images (I_BW):
             Thr = Thr_3;
             hh = max(max(II));
             ll = min(min(II));
@@ -344,7 +350,8 @@ for ss = ss_start:ss_End
             II = II_resize;
 
             value = II;
-            activity = (II(end:-1:1,:,:));            
+            activity = (II(end:-1:1,:,:));
+
             %% Calculating Optical flow:
             
             Ttotal = size(activity,3);
@@ -352,7 +359,6 @@ for ss = ss_start:ss_End
             C = [1 .5 0];
             
             Stp = 1;
-            
             
             disp('Computing Optical Flow');
             % Compute optical flow

@@ -239,7 +239,7 @@ for ss = ss_start:ss_End
         Events_temp = Events;
         
         % Calculate spatial loc of electrodes in cart. and spherical coords
-        
+
         Alphax = 0;%*(rand(1)-0.5)+n*0;
         Alphay = 0;%80*(rand(1)-0.5)+n*0;
         Alphaz = 90;
@@ -266,6 +266,7 @@ for ss = ss_start:ss_End
         phi((phi==360))= 1;
         theta((theta==0))= theta((theta==0))+1;
         
+        % Project Data into 2D space using above spatial conversions 
         EEG_median = (median(EEG_PW(crani_ind,:),1));
         I_EEG = ones(180,359,size(EEG_PW,2));
         I_mask = zeros(180,359,size(EEG_mask,2));
@@ -304,6 +305,7 @@ for ss = ss_start:ss_End
                 
         %% EEG spatial interpolation:
         
+        % Smooth 'Sparse' spatial projections, creating 'I_smoothed'
         %Gaussian:
         figure;mesh(I_EEG(:,:,309))
         h = ones(30);
@@ -319,6 +321,8 @@ for ss = ss_start:ss_End
         %% Temporal subsampling of frames II:
         Thr_counter = 0;
         Thr_ind = 0;
+
+        % Begin Parameter-specific loops, starting with Thr_3
         for Thr_3_ind = 1:size(THR_3,2)
             Thr_3 = THR_3(Thr_3_ind)
             
@@ -326,8 +330,7 @@ for ss = ss_start:ss_End
             num_good_elec = sum(EEG_mask(crani_ind,:),1);
             II_median = (median(reshape(II,[],1,size(II,3)),1));
             
-            
-            %Thresholding the frames to obtain binary images (I_BW):
+            % Thresholding the frames to obtain binary images (I_BW):
             Thr = Thr_3;
             hh = max(max(II));
             ll = min(min(II));
@@ -347,7 +350,8 @@ for ss = ss_start:ss_End
             II = II_resize;
 
             value = II;
-            activity = (II(end:-1:1,:,:));            
+            activity = (II(end:-1:1,:,:));
+
             %% Calculating Optical flow:
             
             Ttotal = size(activity,3);
@@ -356,12 +360,12 @@ for ss = ss_start:ss_End
             
             Stp = 1;
             
-            
             disp('Computing Optical Flow');
-            % Compute optical flow
+            % Compute optical flow 
             opticalFlow = opticalFlowHS;
             of = estimateFlow(opticalFlow, value(:,:,1));
-            % the variable of below stores optical flows at each x,y as real and imaginary values.
+            % the variable 'of' below stores optical flows at each 
+            % x,y as real and imaginary values.
             bb = {};
             cc = {};
             for t = 1:Ttotal-Stp
@@ -369,7 +373,7 @@ for ss = ss_start:ss_End
                 label = bwlabel(activity(:,:,t));
                 st = regionprops( label,'centroid', 'Area', 'BoundingBox' );
                 bb{t} = round(cat(1,st.BoundingBox)); % Bounding box for connected components
-                cc{t} = round(cat(1,st.Centroid)); % Bounding box for connected components
+                cc{t} = round(cat(1,st.Centroid)); % Centroid for connected components
             end
             
             
