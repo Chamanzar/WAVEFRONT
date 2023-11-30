@@ -1,4 +1,10 @@
 function [] = Detection_parallelized_LowRes_vF(Sub_ID,ss_start,ss_End,LR)
+
+%% Function inputs  
+% Sub_ID: Patient ID
+% ss_start, ss_end: Session Range for Processing
+% LR: 'L' or 'R' representing craniectomy hemisphere 
+
 % clear all
 % close all
 % clc
@@ -23,7 +29,7 @@ function [] = Detection_parallelized_LowRes_vF(Sub_ID,ss_start,ss_End,LR)
 % im_scale = 0.1;
 
 
-%% Initialization:
+%% Initialization of Parameters:
 crani_ind = 1:19;
 if(LR=='L')
     LR_sgn = -1;
@@ -34,10 +40,9 @@ else
 end
 
 im_scale = 0.0945;
-
 DELTA_T = 60;
 
-%Grid search for set of parameters in WAVEFRONT:
+% Grid search for set of parameters in WAVEFRONT:
 % THR_1 = 0.05:0.05:0.8;%mm
 % THR_3 = linspace(0.1,0.9,20);
 % % THR_1 = THR_1([1,2,3,4,5,6,7,8,9]);%mm
@@ -45,7 +50,7 @@ DELTA_T = 60;
 % % THR_3 = THR_3(10:15);
 % THR_4 = 2:10;
 
-%OPTIMAL set of parameters (for quick run through the code):
+% OPTIMAL set of parameters (for quick run through the code):
 THR_1 = 0.300000000000000 ;
 THR_2 = 0.600000000000000;
 THR_3 = 0.689473684210526;
@@ -57,7 +62,6 @@ cd(['D:\SD-II_POST_ICA\SD-II\',Sub_ID,'\',Sub_ID])
 Session_names = dir('Patient*');
 Sessions_size = size(Session_names,1);
 
-
 TPR_num = 0;
 TPR_denum = 0;
 TNR_num = 0;
@@ -66,11 +70,14 @@ Tot_detectable_CSD = 0;
 Detected_CSD = 0;
 CSD_event_quality_tot = [];
 
+% Beginning of Session-Specific Loop
 for ss = ss_start:ss_End
     cd(Session_names(ss).name)
     
     current_path = pwd;
     EEG_vis = pop_loadset('filename',[Session_names(ss).name,'_Visualization_Delta.set'],'filepath',current_path);
+    
+    % Filter unnecessary events  
     event_delete_ind = [];
     for event_ind=1:size(EEG_vis.event,2)
         test_ind = strfind(string(EEG_vis.event(event_ind).type),'Data Quality');
@@ -103,6 +110,7 @@ for ss = ss_start:ss_End
     [ind_r,ind_c] = find(isnan(EEG_vis.data));
     EEG_vis.data(ind_r,ind_c) = 0;
     
+    % Load Global Mean data (Session-wide average of EEG_PW)
     Global_M = load([Session_names(ss).name ,'GlobalMean_Delta_SDII_vConfusion_240minOv180min_CCWL20min_Xcrr_Improved_Pruned_vVII.mat']);
     Global_M = Global_M.Global_M;
     Part_names = dir([Session_names(ss).name,'_CSD_ind_*_Delta_SDII_vConfusion_240minOv180min_CCWL20min_Xcrr_Pruned_vVII.mat']);
@@ -120,6 +128,8 @@ for ss = ss_start:ss_End
         Part_num = str2double(Part_name_char{1}(part_ind+4:of_ind-2));
     end
     [~,Part_ind] = sort(Part_num);
+
+    % Load EEG Electrode Spatial Locations 
     UPMC_TBI_EEG_Loc = load('D:\SilenceMap-v1.0\Chamanzar-SilenceMap-668f8ab\EEG_prep\UPMC_TBI_EEG_Loc_SDII_ordered.mat');
     UPMC_TBI_EEG_Loc = UPMC_TBI_EEG_Loc.UPMC_TBI_EEG_Loc;
     
@@ -147,6 +157,7 @@ for ss = ss_start:ss_End
     Strt_tot_temp = {};
     Thr_counter_tot = {};
     
+    % Beginning of CSD Specific Loop
     for CSD_ind_orig = 1:Part_size
         
         
