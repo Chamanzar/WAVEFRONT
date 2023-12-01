@@ -710,12 +710,12 @@ for ss = ss_start:ss_End
                         for i=1:size(CNT_T.PixelIdxList,2)
                             CNT_TT = cat(1,CNT_TT,CNT_T.PixelIdxList{1,i});
                         end
+                                        
+                        BCNT = zeros(size(CNT)); % binary score of frames
+                        WL = 1; % time window length threshold = 30 sec
                         
-                        
-                        
-                        BCNT = zeros(size(CNT));%binary score of frames
-                        WL = 1;%time window length threshold = 30 sec
-                        WL_stitching = floor(2*60*srate/(Sub_sampl));%stitching time window = 2 min
+                        %stitching time window = 2 min
+                        WL_stitching = floor(2*60*srate/(Sub_sampl)); 
                         CNT_e = CNT;
                         for t=WL:size(CNT_e,1)-WL+1
                             temp = find(CNT_e(t-WL+1:t+WL-1));
@@ -724,7 +724,8 @@ for ss = ss_start:ss_End
                             end
                         end
                         
-                        %Reject small time windows and consider overlapping connected components (time samples) at the boundaries:
+                        % Reject small time windows & consider overlapping 
+                        % connected components (time samps) at boundaries:
                         BCNT_T = bwconncomp(BCNT);
                         
                         for j=1:size(BCNT_T.PixelIdxList,2)
@@ -762,9 +763,8 @@ for ss = ss_start:ss_End
                         end
                         BCNT_T = bwconncomp(BCNT);                        
                         
-                        %%
-                        
-                        
+                        %% Find connected comps of BCNT 
+ 
                         CNT_T = zeros(size(CNT));
                         CNT_T(CNT_TT) = 1;
                         
@@ -781,9 +781,11 @@ for ss = ss_start:ss_End
                         Thr_ind = Thr_ind+1;
                         Average_Vel_tot_temp_temp{Thr_ind} = Average_Vel;
                         Strt_tot_temp_temp{Thr_ind} = Strt;
-                        Endd_tot_temp_temp{Thr_ind} = Endd;
-                        
+                        Endd_tot_temp_temp{Thr_ind} = Endd;                       
+
                         %% Performance calculation:
+                        % Find all detection predictions for given 
+                        % ID/Session/Part using parameters Thr1-4 
                         CSD_GT = CSD_GT_temp;
                         Events = Events_temp;
                         CSD_GT(end) = [];
@@ -832,6 +834,8 @@ for ss = ss_start:ss_End
 
                             num_good_elec_tot_sub(:,i_sub) = num_good_elec(Strt:Endd);
                         end
+
+                        % Save all threshold-combination results
                         T_start_tot_temp_temp{Thr_ind} = T_start_tot_sub;
                         T_end_tot_temp_temp{Thr_ind} = T_end_tot_sub;
                         BCNT_tot_temp_temp{Thr_ind} = reshape(BCNT_tot_sub,[],1);
@@ -839,10 +843,12 @@ for ss = ss_start:ss_End
                         CSD_GT_tot_temp_temp{Thr_ind} = reshape(CSD_GT_tot_sub,[],1);
                         num_good_elec_tot_temp_temp{Thr_ind} = reshape(num_good_elec_tot_sub,[],1);
                         CSD_type_tot_temp_temp{Thr_ind} = CSD_type_tot_sub;
+
                     end
                 end
             end
         end
+        % Save each threshold-combination specific result for each Part
         Average_Vel_tot_temp{CSD_ind_orig} = Average_Vel_tot_temp_temp;
         Strt_tot_temp{CSD_ind_orig} = Strt_tot_temp_temp;
         Endd_tot_temp{CSD_ind_orig} = Endd_tot_temp_temp;
@@ -855,19 +861,24 @@ for ss = ss_start:ss_End
         CSD_type_tot_tempp{CSD_ind_orig} = CSD_type_tot_temp_temp;
         
     end
+
+    % End of Part-specific loop
+
     currentFolder = pwd;
     cd ..
-    %%
+    %% Performance Metric Calculations
     TPR_num_TOTAL = {};
     TPR_denum_TOTAL = {};
     TNR_num_TOTAL = {};
     TNR_denum_TOTAL = {};
     CSD_event_quality_tot_TOTAL = {};
 
-    
     Thr_ind = 0;
     CSD_GT_total_temp = CSD_GT_total{1};
     CSD_Labels_total_temp = CSD_Labels_total{1};
+
+    % Loop back through thres-combinations for TPR/FNR calculations at each
+    % Session of given Patient-ID
     for Thr_3_ind = 1:size(THR_3,2)
         for Thr_1_ind = 1:size(THR_1,2)
             for Thr_2_ind = 1:size(THR_2,2)
@@ -902,8 +913,7 @@ for ss = ss_start:ss_End
                     Strt_tot = {};
                     Endd_tot = {};
                     Average_Vel_tot = {};
-                    
-                    
+                                
                     Thr_ind = Thr_ind+1;
                     for CSD_ind_orig = 1:Part_size
                         T_start_tot{CSD_ind_orig}  = T_start_tot_temp{CSD_ind_orig}{Thr_ind};
@@ -924,9 +934,7 @@ for ss = ss_start:ss_End
                     TNR_denum = 0;
                     Tot_detectable_CSD = 0;
                     Detected_CSD = 0;
-                    CSD_event_quality_tot = [];
-                    
-                    
+                    CSD_event_quality_tot = [];              
                     
                     CSD_type_tot_temp = [];
                     for type_i = 1:size(CSD_type_tot,2)
@@ -1017,7 +1025,7 @@ for ss = ss_start:ss_End
                     Det_block_count = 0;
                     correct_alarm = 0;
                     
-                    
+                    % Compare detection times with GT CSD times 
                     parfor i=1:size(Trial_boundary_ind,1)-1
                         Strt = Trial_boundary_ind(i)+1;
                         Endd = Trial_boundary_ind(i+1);
@@ -1109,6 +1117,7 @@ for ss = ss_start:ss_End
                         end
                     end
                     
+                    % Calculate summary stats of given Session+Thres-combn. 
                     bad_Ps = size(find(CSD_Det_Neg_ind==1 & bad_event_ind==1),1);
                     Total_Ns = (size(find(true_negative),1)+size(find(CSD_Det_Neg_ind==2),1)-size(find(correct_alarms),1));
                     CSD_Det_Neg_ind(bad_event_ind==1) = [];
@@ -1134,7 +1143,6 @@ for ss = ss_start:ss_End
                                        
                     CSD_event_quality_tot = [size(bad_event_ind,1),bad_Ns,bad_Ps];%mean(CSD_event_quality_tot);
                     
-                    
                     TPR_num_TOTAL_temp = cat(1,TPR_num_TOTAL_temp,uint32(TPR_num));
                     TPR_denum_TOTAL_temp = cat(1,TPR_denum_TOTAL_temp, uint32(TPR_denum));
                     TNR_num_TOTAL_temp = cat(1, TNR_num_TOTAL_temp, uint32(TNR_num));
@@ -1142,7 +1150,6 @@ for ss = ss_start:ss_End
                     CSD_event_quality_tot_TOTAL_temp = cat(1, CSD_event_quality_tot_TOTAL_temp, uint32(CSD_event_quality_tot));
                     
                     CNT_Vel_temp(CNT_Vel_temp==-1) = []; 
-                    
                     
                     for Strt_ind=1:size(Strt_tot,2)
                         if(~isempty(Strt_tot(Strt_ind)))
@@ -1158,6 +1165,9 @@ for ss = ss_start:ss_End
                     Strt_tot_TOTAL{Thr_4_ind} = Strt_tot_TOTAL_temp;
                     Endd_tot_TOTAL{Thr_4_ind} = Endd_tot_TOTAL_temp;
                 end
+                
+                % Save Session + Thres_1_2_3 combination specific files
+                % (Multiple Thr_4 results are saved to same file)
                 save([currentFolder,'\',Session_names(ss).name ,'_',sprintf('Thr_1_%.2d',Thr_1)...
                     ,'_',sprintf('Thr_2_%.2d',Thr_2),'_',sprintf('Thr_3_%.2d',Thr_3), '_detection_SDIII_240minOv180min_CCWL20_Delta_LowResVelFixedvTEST_VelocitySaveVf.mat'],...
                     'TPR_num_TOTAL_temp','TPR_denum_TOTAL_temp','TNR_num_TOTAL_temp','TNR_denum_TOTAL_temp','CSD_event_quality_tot_TOTAL_temp','Strt_tot_TOTAL','Endd_tot_TOTAL','Average_Vel_tot_TOTAL')
