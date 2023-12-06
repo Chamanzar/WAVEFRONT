@@ -30,6 +30,59 @@ You can cite our papers in [1,2], and our WAVEFRONT software as below:
 
 Chamanzar, A., Elmer, J., Shutter, L., Hartings, J. A., and Grover, P., "WAVEFRONT: open source code and software", GitHub. [![DOI](https://zenodo.org/badge/XXXXX.svg)](https://zenodo.org/badge/latestdoi/XXXXX)
 
+## Notes
+
+The WAVEFRONT Pipeline contains 6 Preprocessing scripts and 1 Detection Algorithm script. 
+
+This code was written using eeglab version 2020.0 and is dependent on functions from this package; using eeglab of matching version is highly encouraged. 
+
+## File Structure 
+Users are free to use their own file organization strategies. However, the code assumes that the files are stored in the following format:
+
+- *Folder of Patient IDs*
+   - Sub-ID A
+     - Sub-ID A
+	    - *All files for Sub-ID A*
+   - Sub-ID B
+   - Sub-ID C
+
+## Brief Description of Functions for Each Script, in Sequential Order
+### StepMII 
+- Load raw files (EEG, ECoG, Impedance, ECG, PLETH, and RESP data; as well as Annotation and CSD events) and combines into streamlined set of files
+- Bandpass filter EEG and ECoG data between [0.1 - 50] Hz 
+- Process ECG, PLETH and RESP data
+
+### StepMI
+- Lowpass EEG data [0 - 30] Hz 
+- Resample EEG data from 256 Hz to 64 Hz
+
+### StepZero
+- Number CSD Events
+- Combine EEG and ECoG data into single file 
+
+### StepI
+- Extract Delta Band of EEG and ECoG signal [0.5 - 4] Hz
+- Normalize and remove outliers from ECoG signal
+
+### StepII
+- Normalize and remove outliers from EEG signal
+
+### StepIII
+- Filter events 
+- Mask temporally isolated portions of EEG data
+- Extract Power Envelope of EEG data
+- Cross-correlate Power Envelope with First-Derivative Kernel
+
+### Detection Algorithm 
+- Load Processed Data from Preprocessing Pipeline 
+- Project data into 2D space using electrode locations and spatial conversions
+- Smooth projections and create binary images representing relevant data patterns
+- Calculate Optical Flows from binary images 
+- Score Flows based on speed and orientation
+- At temporal frames with sufficient Optical Flow scores, detect Spreading Depolarization
+- Compare detection results with ground truths for each Data Session and Threshold Combination 
+
+
 ## References
 
 [1] Chamanzar, A., Elmer, J., Shutter, L. et al. Noninvasive and reliable automated detection of spreading depolarization in severe traumatic brain injury using scalp EEG. Commun Med 3, 113 (2023). https://doi.org/10.1038/s43856-023-00344-3
