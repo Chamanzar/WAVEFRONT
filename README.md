@@ -28,7 +28,8 @@ This work was supported, in part, by grants from the National Science Foundation
 
 You can cite our papers in [1,2], and our WAVEFRONT software as below:
 
-Chamanzar, A., Elmer, J., Shutter, L., Hartings, J. A., and Grover, P., "WAVEFRONT: open source code and software", GitHub. [![DOI](https://zenodo.org/badge/XXXXX.svg)](https://zenodo.org/badge/latestdoi/XXXXX)
+Chamanzar, A., Elmer, J., Shutter, L., Hartings, J. A., and Grover, P., "WAVEFRONT: open source code and software", GitHub. [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8210380.svg)](https://doi.org/10.5281/zenodo.8210380)
+
 
 ## Notes
 
